@@ -30,6 +30,14 @@ class HandPoseModel {
         ring: CGPoint,
         little: CGPoint
     ) -> HandPose {
+        print(
+            "Thumb Location:", thumb, "\n",
+            "Index Location:", index, "\n",
+            "Middle Location:", middle, "\n",
+            "Ring Location:", ring, "\n",
+            "Little Location:", little
+        )
+        
         return .none
     }
 }
