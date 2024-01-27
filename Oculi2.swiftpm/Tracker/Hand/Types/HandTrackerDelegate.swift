@@ -17,4 +17,5 @@ protocol HandTrackerDelegate {
         ring: VNConfidence,
         litte: VNConfidence
     )
+    func handDidChange(to value: Hand)
 }

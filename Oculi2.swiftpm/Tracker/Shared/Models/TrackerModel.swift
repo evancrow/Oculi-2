@@ -17,6 +17,7 @@ public class TrackerModel: ObservableObject {
 
     // MARK: - Properties
     let detectionModel: DetectionModel
+    let interactionManager = InteractionManager()
 
     // MARK: - Methods
     /// Should be called if camera permission state changes
@@ -27,22 +28,23 @@ public class TrackerModel: ObservableObject {
     // MARK: - init
     init(avModel: AVModel) {
         self.avModel = avModel
-       
-        let faceTrackerModel = FaceTrackerModel()
+
+        let faceTrackerModel = FaceTrackerModel(interactionManager: interactionManager)
         self.faceTrackerModel = faceTrackerModel
-        
-        let handTrackerModel = HandTrackerModel()
+
+        let handTrackerModel = HandTrackerModel(interactionManager: interactionManager)
         self.handTrackerModel = handTrackerModel
-        
+
         self.detectionModel = DetectionModel(
             detectionTypes: [
                 .Face(delegate: faceTrackerModel),
                 .Hands(delegate: handTrackerModel),
             ]
         )
-        
+
         // Add the delegate to AVModel.
         self.avModel.delegate = self
+        self.avModel.config()
     }
 }
 
@@ -51,7 +53,7 @@ extension TrackerModel: AVModelDelegate {
     func onCaptureOutput(
         pixelBuffer: CVImageBuffer,
         orientation: CGImagePropertyOrientation,
-        requestHandlerOptions: [VNImageOption : AnyObject]
+        requestHandlerOptions: [VNImageOption: AnyObject]
     ) {
         detectionModel.createDetectionRequests(
             pixelBuffer: pixelBuffer,

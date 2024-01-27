@@ -10,13 +10,15 @@ import SwiftUI
 import Vision
 
 class HandTrackerModel: ObservableObject {
-    private var interactionManager: InteractionManager!
-    
     @Published public private(set) var quality: VisionQualityState = .NotDetected
     @Published public private(set) var currentHandPose: HandPose = .none
+    @Published public private(set) var currentHand: Hand?
     
-    // MARK: - config
-    public func config(interactionManager: InteractionManager) {
+    private let interactionManager: InteractionManager
+    public let calibrationModel: HandPoseCalibrationModel = HandPoseCalibrationModel()
+   
+    // MARK: - init
+    init(interactionManager: InteractionManager) {
         self.interactionManager = interactionManager
     }
 }
@@ -24,7 +26,9 @@ class HandTrackerModel: ObservableObject {
 // MARK: - HandTrackerDelegate
 extension HandTrackerModel: HandTrackerDelegate {
     func handPoseDidChange(to value: HandPose) {
-        self.currentHandPose = value
+        if currentHandPose != value {
+            self.currentHandPose = value
+        }
     }
 
     func handPoseConfidenceChanged(
@@ -54,5 +58,9 @@ extension HandTrackerModel: HandTrackerDelegate {
         } else {
             quality = .NotDetected
         }
+    }
+
+    func handDidChange(to value: Hand) {
+        self.currentHand = value
     }
 }

@@ -11,7 +11,7 @@ import Vision
 
 class AVModel: NSObject, ObservableObject {
     var delegate: AVModelDelegate!
-    
+
     private var captureSession: AVCaptureSession?
 
     private var videoDataOutput: AVCaptureVideoDataOutput?

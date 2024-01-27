@@ -304,13 +304,13 @@ public class FaceTrackerModel: ObservableObject {
     }
 
     // MARK: - config
-    public func config(interactionManager: InteractionManager) {
-        self.interactionManager = interactionManager
-    }
-
     public func updateViewValues(_ size: CGSize) {
         self.height = size.height
         self.width = size.width
+    }
+
+    init(interactionManager: InteractionManager) {
+        self.interactionManager = interactionManager
     }
 }
 

@@ -181,14 +181,46 @@ class DetectionModel {
         // Look for tip points.
         guard let thumbTipPoint = thumbPoints[.thumbTip],
             let indexTipPoint = indexFingerPoints[.indexTip],
-            let middleTipPoint = indexFingerPoints[.middleTip],
-            let ringTipPoint = indexFingerPoints[.ringTip],
-            let littleTipPoint = indexFingerPoints[.littleTip]
+            let middleTipPoint = middleFingerPoints[.middleTip],
+            let ringTipPoint = ringFingerPoints[.ringTip],
+            let littleTipPoint = littleFingerPoints[.littleTip]
+        else {
+            return
+        }
+
+        // Look for knuckle points.
+        guard let thumbKnucklePoint = thumbPoints[.thumbIP],
+            let indexKnucklePoint = indexFingerPoints[.indexMCP],
+            let middleKnucklePoint = middleFingerPoints[.middleMCP],
+            let ringKnucklePoint = ringFingerPoints[.ringMCP],
+            let littleKnucklePoint = littleFingerPoints[.littleMCP]
         else {
             return
         }
 
         DispatchQueue.main.async {
+            let hand = Hand(
+                tips: [
+                    .thumb: thumbTipPoint.location,
+                    .index: indexTipPoint.location,
+                    .middle: middleTipPoint.location,
+                    .ring: ringTipPoint.location,
+                    .little: littleTipPoint.location,
+                ],
+                knuckles: [
+                    .thumb: thumbKnucklePoint.location,
+                    .index: indexKnucklePoint.location,
+                    .middle: middleKnucklePoint.location,
+                    .ring: ringKnucklePoint.location,
+                    .little: littleKnucklePoint.location,
+                ]
+            )
+
+            // Convert points from Vision coordinates to AVFoundation coordinates.
+            delegate.handPoseDidChange(
+                to: HandPoseModel.predictHandPose(from: hand)
+            )
+            delegate.handDidChange(to: hand)
             delegate.handPoseConfidenceChanged(
                 thumb: thumbTipPoint.confidence,
                 index: indexTipPoint.confidence,
@@ -196,17 +228,6 @@ class DetectionModel {
                 ring: ringTipPoint.confidence,
                 litte: littleTipPoint.confidence
             )
-
-            // Convert points from Vision coordinates to AVFoundation coordinates.
-            let newPose = HandPoseModel.predictPoseFromTipPoints(
-                thumb: CGPoint(x: thumbTipPoint.location.x, y: 1 - thumbTipPoint.location.y),
-                index: CGPoint(x: indexTipPoint.location.x, y: 1 - indexTipPoint.location.y),
-                middle: CGPoint(x: middleTipPoint.location.x, y: 1 - middleTipPoint.location.y),
-                ring: CGPoint(x: ringTipPoint.location.x, y: 1 - ringTipPoint.location.y),
-                little: CGPoint(x: littleTipPoint.location.x, y: 1 - littleTipPoint.location.y)
-            )
-
-            delegate.handPoseDidChange(to: newPose)
         }
     }
 
