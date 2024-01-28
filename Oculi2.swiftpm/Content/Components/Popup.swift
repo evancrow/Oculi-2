@@ -1,6 +1,6 @@
 //
 //  Popup.swift
-//  
+//
 //
 //  Created by Evan Crow on 1/28/24.
 //
@@ -12,12 +12,12 @@ struct Popup<Content: View>: View {
     let staticState: Bool
     let collapsedIcon: String?
     let content: Content
-    
+
     var body: some View {
         VStack(spacing: PaddingSizes._32) {
             if expanded {
                 content
-                
+
                 if !staticState {
                     Button(action: toggleExpandedState) {
                         Text("Close")
@@ -26,7 +26,8 @@ struct Popup<Content: View>: View {
             } else {
                 Button(action: toggleExpandedState) {
                     Image(systemName: collapsedIcon ?? "")
-                        .font(.title3)
+                        .resizable()
+                        .frame(width: 18, height: 18)
                 }
             }
         }
@@ -35,7 +36,7 @@ struct Popup<Content: View>: View {
         .background(Color.Oculi.Pink)
         .clipShape(RoundedRectangle(cornerRadius: expanded ? 0 : .infinity))
     }
-    
+
     func toggleExpandedState() {
         if !staticState {
             withAnimation(.interactiveSpring) {
@@ -43,7 +44,7 @@ struct Popup<Content: View>: View {
             }
         }
     }
-    
+
     init(
         expanded: Bool = false,
         collapsedIcon: String,
@@ -54,7 +55,7 @@ struct Popup<Content: View>: View {
         self.collapsedIcon = collapsedIcon
         self.content = content()
     }
-    
+
     init(@ViewBuilder content: () -> Content) {
         self._expanded = State(initialValue: true)
         self.staticState = true
@@ -68,11 +69,11 @@ struct Popup<Content: View>: View {
         Popup(collapsedIcon: "scope") {
             Text("Title")
         }
-        
+
         Popup(expanded: true, collapsedIcon: "scope") {
             Text("Title")
         }
-        
+
         Popup {
             Text("Title")
         }

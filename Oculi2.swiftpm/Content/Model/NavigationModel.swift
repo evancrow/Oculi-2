@@ -1,6 +1,6 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Evan Crow on 1/28/24.
 //
@@ -16,7 +16,7 @@ enum Page {
     case Playground
     case Developer
     case EvanCrow
-    
+
     @ViewBuilder
     var page: some View {
         switch self {
@@ -36,7 +36,7 @@ enum Page {
             EvanCrowPage()
         }
     }
-    
+
     var nextPage: Page? {
         switch self {
         case .Landing:
@@ -59,7 +59,7 @@ enum Page {
 
 class NavigationModel: ObservableObject {
     @Published private(set) var navigationStack: [Page]
-    
+
     func moveToNextPage(popFirst: Bool = false) {
         if popFirst, navigationStack.count > 1 {
             navigationStack.removeLast()
@@ -67,19 +67,19 @@ class NavigationModel: ObservableObject {
             guard let nextPage = navigationStack.last?.nextPage else {
                 return
             }
-            
+
             self.navigationStack = [nextPage]
         }
     }
-    
+
     func goTo(page: Page) {
         self.navigationStack = [page]
     }
-    
+
     func stack(page: Page) {
         self.navigationStack.append(page)
     }
-    
+
     init() {
         self.navigationStack = [.Landing]
     }

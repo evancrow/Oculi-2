@@ -100,12 +100,12 @@ enum FontStyles: String, CaseIterable {
 
 extension UIFont {
     static var FontsLoaded = false
-    
+
     static func loadAllFonts() {
         guard !FontsLoaded else {
             return
         }
-        
+
         let fontNames = [
             "Aileron-Black",
             "Aileron-BlackItalic",
@@ -132,14 +132,14 @@ extension UIFont {
     private static func loadFont(named name: String) {
         let otf = Bundle.main.url(forResource: name, withExtension: "otf")
         let ttf = Bundle.main.url(forResource: name, withExtension: "ttf")
-        
+
         guard let fontURL = otf ?? ttf,
             let fontDataProvider = CGDataProvider(url: fontURL as CFURL),
-            let font = CGFont(fontDataProvider) else
-        {
+            let font = CGFont(fontDataProvider)
+        else {
             return
         }
-        
+
         var error: Unmanaged<CFError>?
         if !CTFontManagerRegisterGraphicsFont(font, &error) {
             print("Error loading font: \(name)")

@@ -25,7 +25,7 @@ public struct InteractionViewWrapper<Content: View>: View {
                 ErrorView(
                     error:
                         "Please give \(nextRequiredPermission.0.rawValue) permission in settings",
-                    buttonText: "Check Again", 
+                    buttonText: "Check Again",
                     buttonAction: model.resetAVModel
                 )
             case .unable:
@@ -68,7 +68,7 @@ public struct InteractionViewWrapper<Content: View>: View {
                 // model.keyboardVisible = keyboardVisible
             }
         }
-        
+
         /*
         ZStack {
             if permissionModel.nextRequiredPermission == nil {

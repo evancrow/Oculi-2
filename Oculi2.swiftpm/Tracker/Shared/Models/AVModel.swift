@@ -24,7 +24,7 @@ class AVModel: NSObject, ObservableObject {
     private func setupAVCaptureSession() {
         let captureSession = AVCaptureSession()
 
-         if PermissionModel.shared.getPermissionState(permission: .camera) == .authorized {
+        if PermissionModel.shared.getPermissionState(permission: .camera) == .authorized {
             do {
                 let inputDevice = try self.configureFrontCamera(for: captureSession)
                 self.configureVideoDataOutput(

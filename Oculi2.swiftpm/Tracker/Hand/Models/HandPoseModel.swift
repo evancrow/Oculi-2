@@ -18,7 +18,7 @@ enum HandPose: String, CaseIterable {
     case twoFinger = "Two Finger Point"
     /// No pose detected.
     case none = "None"
-    
+
     var title: String {
         switch self {
         case .flat:
@@ -33,7 +33,7 @@ enum HandPose: String, CaseIterable {
             "None"
         }
     }
-    
+
     var setUpInstruction: String {
         switch self {
         case .flat:
@@ -48,7 +48,7 @@ enum HandPose: String, CaseIterable {
             "None"
         }
     }
-    
+
     var nextPose: HandPose? {
         switch self {
         case .flat:

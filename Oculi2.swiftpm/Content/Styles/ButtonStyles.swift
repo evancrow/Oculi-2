@@ -32,13 +32,13 @@ struct UnderlinedButtonStyle: ButtonStyle {
 #Preview {
     VStack(spacing: 32) {
         Button {
-            
+
         } label: {
             Text("Button Label")
         }.buttonStyle(DefaultButtonStyle())
-        
+
         Button {
-            
+
         } label: {
             Text("Button Label")
         }.buttonStyle(UnderlinedButtonStyle())

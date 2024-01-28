@@ -1,6 +1,6 @@
 //
 //  TextSection.swift
-//  
+//
 //
 //  Created by Evan Crow on 1/28/24.
 //
@@ -11,7 +11,7 @@ struct TextSection: View {
     let header: String
     let text: String
     let expandedSize: Bool
-    
+
     var body: some View {
         HStack(
             alignment: expandedSize ? .top : .center,
@@ -21,13 +21,13 @@ struct TextSection: View {
                 .font(FontStyles.Title3.font)
                 .frame(maxWidth: expandedSize ? 100 : nil)
                 .multilineTextAlignment(.center)
-            
+
             Text(text)
                 .font(FontStyles.Body.font)
                 .frame(maxWidth: expandedSize ? 500 : nil, alignment: .leading)
         }
     }
-    
+
     init(header: String, text: String, expandedSize: Bool = true) {
         self.header = header
         self.text = text
@@ -40,7 +40,7 @@ struct TextSection: View {
         TextSection(header: "Line 1", text: "Text line.")
         TextSection(header: "Line 2", text: "Text line.")
         TextSection(header: "Header", text: "Text\nNew line.")
-        
+
         TextSection(header: "Header", text: "Text", expandedSize: false)
     }
 }

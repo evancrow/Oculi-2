@@ -1,6 +1,6 @@
 //
 //  TutorialPage.swift
-//  
+//
 //
 //  Created by Evan Crow on 1/28/24.
 //
@@ -18,11 +18,11 @@ enum TutorialStep: String {
 struct TutorialPage: View {
     @EnvironmentObject var navigationModel: NavigationModel
     @State var step: TutorialStep = .tapping
-    
+
     var title: String {
         step.rawValue
     }
-    
+
     var subtitle: String {
         switch step {
         case .tapping:
@@ -35,35 +35,36 @@ struct TutorialPage: View {
             "Pinch in and out to zoom."
         }
     }
-    
+
     var nextStep: Text {
         switch step {
         case .tapping, .scrolling:
             return Text("To move on, tap ") + Text("Next Page.").italic()
         case .panning:
-            return Text("Oculi will automatically move to the next page after interacting with the map.")
+            return Text(
+                "Oculi will automatically move to the next page after interacting with the map.")
         case .zooming:
             return Text("To finish the tutorial, tap ") + Text("Finish Tutorial.").italic()
         }
     }
-    
+
     @ViewBuilder
     var content: some View {
         switch step {
         case .tapping:
             VStack(spacing: PaddingSizes._52) {
                 Button {
-                    
+
                 } label: {
                     Text("Button 1")
                 }
-                
+
                 Button {
-                    
+
                 } label: {
                     Text("Button 1")
                 }
-                
+
                 Button {
                     step = .panning
                 } label: {
@@ -79,7 +80,7 @@ struct TutorialPage: View {
                     LinearGradient(colors: [.blue, .red], startPoint: .top, endPoint: .bottom)
                         .frame(maxWidth: .infinity, idealHeight: 1000)
                 }
-                
+
                 Button {
                     step = .zooming
                 } label: {
@@ -90,14 +91,14 @@ struct TutorialPage: View {
             VStack(spacing: PaddingSizes._52) {
                 Color.gray
                     .frame(maxWidth: 600, idealHeight: 300)
-                
+
                 VStack(spacing: PaddingSizes._12) {
                     Button {
                         navigationModel.moveToNextPage(popFirst: true)
                     } label: {
                         Text("Finish Tutorial")
                     }.buttonStyle(DefaultButtonStyle())
-                    
+
                     Button {
                         step = .tapping
                     } label: {
@@ -107,23 +108,23 @@ struct TutorialPage: View {
             }
         }
     }
-    
+
     var body: some View {
         PageContainer {
             VStack(spacing: PaddingSizes._52) {
                 VStack(spacing: PaddingSizes._6) {
                     Text(title)
                         .font(FontStyles.Title.font)
-                    
+
                     Text(subtitle)
                         .font(FontStyles.Body.font)
-                    
+
                     nextStep
                         .font(FontStyles.Body.font)
                 }
-                
+
                 content
-                
+
                 Button {
                     navigationModel.moveToNextPage(popFirst: true)
                 } label: {

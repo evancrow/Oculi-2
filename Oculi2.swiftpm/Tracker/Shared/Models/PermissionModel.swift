@@ -29,7 +29,7 @@ class PermissionModel: ObservableObject {
     var nextRequiredPermission: (Permission, PermissionState)? {
         for permission in requiredPermissions {
             let permissionState = getPermissionState(permission: permission)
-            if permissionState != .authorized  {
+            if permissionState != .authorized {
                 return (permission, permissionState)
             }
         }
@@ -114,7 +114,7 @@ class PermissionModel: ObservableObject {
             completion(permissionState)
         }
     }
-    
+
     public func requestAllRequiredPermissions(completion: @escaping (Bool) -> Void) {
         var allAllowed = true
         for (index, permission) in requiredPermissions.enumerated() {
@@ -122,7 +122,7 @@ class PermissionModel: ObservableObject {
                 if value != .authorized {
                     allAllowed = false
                 }
-                
+
                 if index == self.requiredPermissions.count - 1 {
                     completion(allAllowed)
                 }
