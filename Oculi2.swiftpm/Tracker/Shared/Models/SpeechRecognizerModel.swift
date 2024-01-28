@@ -124,16 +124,5 @@ class SpeechRecognizerModel: ObservableObject {
     // MARK: - init
     init() {
         recognizer = SFSpeechRecognizer()
-        Self.setupPermissions()
-    }
-
-    static func setupPermissions() {
-        PermissionModel.shared.getPermissionState(permission: .microphone) { permissionState in
-            guard permissionState == .authorized else {
-                return
-            }
-
-            PermissionModel.shared.getPermissionState(permission: .speechRecognition) { _ in }
-        }
     }
 }

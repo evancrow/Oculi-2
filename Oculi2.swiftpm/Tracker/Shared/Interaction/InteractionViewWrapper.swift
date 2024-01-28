@@ -25,7 +25,9 @@ public struct InteractionViewWrapper<Content: View>: View {
                 ErrorView(
                     error:
                         "Please give \(nextRequiredPermission.0.rawValue) permission in settings",
-                    buttonText: "Check Again", buttonAction: model.resetAVModel)
+                    buttonText: "Check Again", 
+                    buttonAction: model.resetAVModel
+                )
             case .unable:
                 ErrorView(
                     error:
@@ -40,43 +42,44 @@ public struct InteractionViewWrapper<Content: View>: View {
     }
 
     public var body: some View {
+        GeometryReader { geom in
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    content
+                    Spacer()
+                }
+                Spacer()
+            }
+            .environmentObject(geometryProxyValue)
+            .environmentObject(model)
+            .environmentObject(model.interactionManager)
+            .environmentObject(model.handTrackerModel)
+            .environmentObject(model.faceTrackerModel)
+            .environmentObject(speechRecognizerModel)
+            .padding(.bottom)
+            .useEffect(deps: geom.size) { _ in
+                // model.updateViewValues(geom.size)
+                geometryProxyValue.geom = geom
+            }.useEffect(deps: geom.safeAreaInsets.bottom) { bottomSafeArea in
+                keyboardVisible = bottomSafeArea > 100
+            }.onChange(of: keyboardVisible) { _ in
+                // model.keyboardVisible = keyboardVisible
+            }
+        }
+        
+        /*
         ZStack {
             if permissionModel.nextRequiredPermission == nil {
-                GeometryReader { geom in
-                    HStack {
-                        Spacer()
-                        content
-                        Spacer()
-                    }
-                    .environmentObject(geometryProxyValue)
-                    .environmentObject(model)
-                    .environmentObject(model.interactionManager)
-                    .environmentObject(model.handTrackerModel)
-                    .environmentObject(model.faceTrackerModel)
-                    .environmentObject(speechRecognizerModel)
-                    .padding(.bottom)
-                    .useEffect(deps: geom.size) { _ in
-                        // model.updateViewValues(geom.size)
-                        geometryProxyValue.geom = geom
-                    }.useEffect(deps: geom.safeAreaInsets.bottom) { bottomSafeArea in
-                        keyboardVisible = bottomSafeArea > 100
-                    }.onChange(of: keyboardVisible) { _ in
-                        // model.keyboardVisible = keyboardVisible
-                    }
-                }
-
-                /* if !keyboardVisible && model.isTracking {
+                if !keyboardVisible && model.isTracking {
                     Cursor(offset: model.offset)
-                } */
+                }
             } else if permissionModel.nextRequiredPermission?.1 != .unknown {
                 permissionErrorView
             }
-        }.onAppear {
-            DispatchQueue.main.async {
-                // model.config(interactionManager: interactionManager)
-                SpeechRecognizerModel.setupPermissions()
-            }
         }
+         */
     }
 
     public init(trackerModel: TrackerModel, content: () -> Content) {

@@ -18,8 +18,49 @@ enum HandPose: String, CaseIterable {
     case twoFinger = "Two Finger Point"
     /// No pose detected.
     case none = "None"
-    /// Unable to detect a pose.
-    case unknown = "Unknown"
+    
+    var title: String {
+        switch self {
+        case .flat:
+            "Flat Hand"
+        case .pinch:
+            "Pinch Your Fingers"
+        case .point:
+            "Point"
+        case .twoFinger:
+            "Point Two Fingers"
+        case .none:
+            "None"
+        }
+    }
+    
+    var setUpInstruction: String {
+        switch self {
+        case .flat:
+            "Hold your hands up, palms facing the camera. Keep your fingers together, like you’re saying stop."
+        case .pinch:
+            "Pinch both your thumb and your index finger together."
+        case .point:
+            "Point both of your index fingers at the pink dot."
+        case .twoFinger:
+            "Point both of your index and middle fingers at the pink dot."
+        case .none:
+            "None"
+        }
+    }
+    
+    var nextPose: HandPose? {
+        switch self {
+        case .flat:
+            return .pinch
+        case .pinch:
+            return .point
+        case .point:
+            return .twoFinger
+        default:
+            return nil
+        }
+    }
 }
 
 struct HandPoseDefaults {
@@ -32,10 +73,6 @@ struct HandPoseDefaults {
 }
 
 class HandPoseModel {
-    static func calibrate() {
-        
-    }
-    
     static func predictHandPose(from hand: Hand) -> HandPose {
         // Check for a flat hand.
         if hand.tipDistances.enumerated().allSatisfy({ $1 < HandPoseDefaults.FlatMargins[$0] })

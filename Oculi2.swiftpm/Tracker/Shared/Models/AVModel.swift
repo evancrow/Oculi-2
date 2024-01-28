@@ -24,27 +24,24 @@ class AVModel: NSObject, ObservableObject {
     private func setupAVCaptureSession() {
         let captureSession = AVCaptureSession()
 
-        PermissionModel.shared.getPermissionState(permission: .camera) { permissionState in
-            if permissionState == .authorized {
-                do {
-                    let inputDevice = try self.configureFrontCamera(for: captureSession)
-                    self.configureVideoDataOutput(
-                        for: inputDevice.device,
-                        resolution: inputDevice.resolution,
-                        captureSession: captureSession
-                    )
-                    self.captureSession = captureSession
+         if PermissionModel.shared.getPermissionState(permission: .camera) == .authorized {
+            do {
+                let inputDevice = try self.configureFrontCamera(for: captureSession)
+                self.configureVideoDataOutput(
+                    for: inputDevice.device,
+                    resolution: inputDevice.resolution,
+                    captureSession: captureSession
+                )
+                self.captureSession = captureSession
 
-                    captureSession.startRunning()
+                captureSession.startRunning()
 
-                    return
-                } catch {
-                    print("Error setting up AVCapture session: ", error.localizedDescription)
-                    PermissionModel.shared.permissionStates[.camera] = .unable
-                }
-
-                self.teardownAVCapture()
+                return
+            } catch {
+                print("Error setting up AVCapture session: ", error.localizedDescription)
             }
+
+            self.teardownAVCapture()
         }
     }
 

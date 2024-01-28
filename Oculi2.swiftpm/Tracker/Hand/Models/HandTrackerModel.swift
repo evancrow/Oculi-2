@@ -13,10 +13,10 @@ class HandTrackerModel: ObservableObject {
     @Published public private(set) var quality: VisionQualityState = .NotDetected
     @Published public private(set) var currentHandPose: HandPose = .none
     @Published public private(set) var currentHand: Hand?
-    
+
     private let interactionManager: InteractionManager
     public let calibrationModel: HandPoseCalibrationModel = HandPoseCalibrationModel()
-   
+
     // MARK: - init
     init(interactionManager: InteractionManager) {
         self.interactionManager = interactionManager

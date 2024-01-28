@@ -24,16 +24,13 @@ enum Permission: String, CaseIterable {
 
 class PermissionModel: ObservableObject {
     static let shared = PermissionModel()
-
-    @Published var permissionStates: [Permission: PermissionState]
-    let requiredPermissions: [Permission] = [.camera, .microphone, .speechRecognition]
+    private let requiredPermissions: [Permission] = [.camera, .microphone, .speechRecognition]
 
     var nextRequiredPermission: (Permission, PermissionState)? {
-        for permissionKey in permissionStates.keys {
-            if let permissionState = permissionStates[permissionKey],
-                requiredPermissions.contains(permissionKey), permissionState != .authorized
-            {
-                return (permissionKey, permissionState)
+        for permission in requiredPermissions {
+            let permissionState = getPermissionState(permission: permission)
+            if permissionState != .authorized  {
+                return (permission, permissionState)
             }
         }
 
@@ -41,60 +38,65 @@ class PermissionModel: ObservableObject {
     }
 
     /// Gets the permission state from the system.
-    public func getPermissionState(
-        permission: Permission, completion: @escaping (PermissionState) -> Void
-    ) {
-        requestPermissionIfNeeded(permission: permission) { state in
-            DispatchQueue.main.async {
-                self.permissionStates[permission] = state
-                completion(state)
+    public func getPermissionState(permission: Permission) -> PermissionState {
+        switch permission {
+        case .camera:
+            switch AVCaptureDevice.authorizationStatus(for: .video) {
+            case .authorized:
+                return .authorized
+            case .notDetermined:
+                return .unknown
+            case .denied:
+                return .denied
+            case .restricted:
+                return .unable
+            @unknown default:
+                return .unable
+            }
+        case .microphone:
+            switch AVAudioSession.sharedInstance().recordPermission {
+            case .granted:
+                return .authorized
+            case .undetermined:
+                return .unknown
+            case .denied:
+                return .denied
+            @unknown default:
+                return .unable
+            }
+        case .speechRecognition:
+            switch SFSpeechRecognizer.authorizationStatus() {
+            case .authorized:
+                return .authorized
+            case .denied:
+                return .denied
+            case .restricted:
+                return .unable
+            case .notDetermined:
+                return .unknown
+            @unknown default:
+                return .unable
             }
         }
     }
 
     /// Checks if the user has given permsission to use the input, and requests it if needed.
-    private func requestPermissionIfNeeded(
+    public func requestPermissionIfNeeded(
         permission: Permission, completion: @escaping (PermissionState) -> Void
     ) {
-        switch permission {
-
-        case .camera:
-            switch AVCaptureDevice.authorizationStatus(for: .video) {
-            case .authorized:
-                completion(.authorized)
-            case .notDetermined:
+        let permissionState = getPermissionState(permission: permission)
+        switch permissionState {
+        case .unknown:
+            switch permission {
+            case .camera:
                 AVCaptureDevice.requestAccess(for: .video) { granted in
                     completion(granted ? .authorized : .denied)
                 }
-            case .denied:
-                completion(.denied)
-            case .restricted:
-                completion(.unable)
-            @unknown default:
-                completion(.unable)
-            }
-        case .microphone:
-            switch AVAudioSession.sharedInstance().recordPermission {
-            case .granted:
-                completion(.authorized)
-            case .undetermined:
+            case .microphone:
                 AVAudioSession.sharedInstance().requestRecordPermission { granted in
                     completion(granted ? .authorized : .denied)
                 }
-            case .denied:
-                completion(.denied)
-            @unknown default:
-                completion(.unable)
-            }
-        case .speechRecognition:
-            switch SFSpeechRecognizer.authorizationStatus() {
-            case .authorized:
-                completion(.authorized)
-            case .denied:
-                completion(.denied)
-            case .restricted:
-                completion(.unable)
-            case .notDetermined:
+            case .speechRecognition:
                 SFSpeechRecognizer.requestAuthorization { (authStatus) in
                     switch authStatus {
                     case .authorized:
@@ -107,19 +109,24 @@ class PermissionModel: ObservableObject {
                         completion(.unable)
                     }
                 }
-            @unknown default:
-                completion(.unable)
             }
+        default:
+            completion(permissionState)
         }
     }
-
-    // MARK: - init
-    init() {
-        var permissionStates: [Permission: PermissionState] = [:]
-        for permission in Permission.allCases {
-            permissionStates[permission] = .unknown
+    
+    public func requestAllRequiredPermissions(completion: @escaping (Bool) -> Void) {
+        var allAllowed = true
+        for (index, permission) in requiredPermissions.enumerated() {
+            requestPermissionIfNeeded(permission: permission) { value in
+                if value != .authorized {
+                    allAllowed = false
+                }
+                
+                if index == self.requiredPermissions.count - 1 {
+                    completion(allAllowed)
+                }
+            }
         }
-
-        self.permissionStates = permissionStates
     }
 }
