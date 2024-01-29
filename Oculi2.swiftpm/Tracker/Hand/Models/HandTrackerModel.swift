@@ -62,5 +62,6 @@ extension HandTrackerModel: HandTrackerDelegate {
 
     func handDidChange(to value: Hand) {
         self.currentHand = value
+        self.calibrationModel.receivedNewHand(data: value)
     }
 }

@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct Popup<Content: View>: View {
-    @State private var expanded: Bool
+    @Binding private var expanded: Bool
     let staticState: Bool
     let collapsedIcon: String?
     let content: Content
@@ -46,18 +46,18 @@ struct Popup<Content: View>: View {
     }
 
     init(
-        expanded: Bool = false,
+        expanded: Binding<Bool>,
         collapsedIcon: String,
         @ViewBuilder content: () -> Content
     ) {
-        self._expanded = State(initialValue: expanded)
+        self._expanded = expanded
         self.staticState = false
         self.collapsedIcon = collapsedIcon
         self.content = content()
     }
 
     init(@ViewBuilder content: () -> Content) {
-        self._expanded = State(initialValue: true)
+        self._expanded = State(initialValue: true).projectedValue
         self.staticState = true
         self.collapsedIcon = nil
         self.content = content()
@@ -65,12 +65,15 @@ struct Popup<Content: View>: View {
 }
 
 #Preview {
-    VStack {
-        Popup(collapsedIcon: "scope") {
+    @State var expanded1: Bool = false
+    @State var expanded2: Bool = true
+
+    return VStack {
+        Popup(expanded: $expanded1, collapsedIcon: "scope") {
             Text("Title")
         }
 
-        Popup(expanded: true, collapsedIcon: "scope") {
+        Popup(expanded: $expanded2, collapsedIcon: "scope") {
             Text("Title")
         }
 

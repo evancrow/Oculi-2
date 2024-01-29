@@ -58,7 +58,12 @@ enum Page {
 }
 
 class NavigationModel: ObservableObject {
-    @Published private(set) var navigationStack: [Page]
+    @Published private(set) var navigationStack: [Page] {
+        didSet {
+            pageId = UUID()
+        }
+    }
+    @Published private(set) var pageId: UUID = UUID()
 
     func moveToNextPage(popFirst: Bool = false) {
         if popFirst, navigationStack.count > 1 {
@@ -77,6 +82,10 @@ class NavigationModel: ObservableObject {
     }
 
     func stack(page: Page) {
+        if navigationStack.last == page {
+            navigationStack.removeLast()
+        }
+
         self.navigationStack.append(page)
     }
 

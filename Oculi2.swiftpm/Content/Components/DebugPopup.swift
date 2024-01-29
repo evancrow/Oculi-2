@@ -8,11 +8,12 @@
 import SwiftUI
 
 struct DebugPopup: View {
+    @State var expanded = false
     @EnvironmentObject var navigationModel: NavigationModel
     @EnvironmentObject var handTrackerModel: HandTrackerModel
 
     var body: some View {
-        Popup(expanded: false, collapsedIcon: "scope") {
+        Popup(expanded: $expanded, collapsedIcon: "scope") {
             VStack(spacing: PaddingSizes._32) {
                 Text("Debug Tools")
                     .font(FontStyles.Title2.font)
@@ -33,15 +34,15 @@ struct DebugPopup: View {
                     if let currentHand = handTrackerModel.currentHand {
                         TextSection(
                             header: "Distances",
-                            text: currentHand.tipDistances.reduce("") { partialResult, value in
-                                partialResult + value.formatted()
-                            },
+                            text: currentHand.tipDistances.map { $0.formatted() }.joined(
+                                separator: ", "),
                             expandedSize: false
                         )
                     }
                 }
 
                 Button {
+                    expanded = false
                     navigationModel.stack(page: .Calibrate)
                 } label: {
                     Text("Re-Calibrate")

@@ -8,6 +8,7 @@
 import Foundation
 
 enum AileronFont: String {
+    /*
     case Black = "Aileron-Black"
     case BlackItalic = "Aileron-BlackItalic"
 
@@ -16,6 +17,7 @@ enum AileronFont: String {
 
     case Bold = "Aileron-Bold"
     case BoldItalic = "Aileron-BoldItalic"
+     */
 
     case SemiBold = "Aileron-SemiBold"
     case SemiBoldItalic = "Aileron-SemiBoldItalic"
@@ -23,6 +25,7 @@ enum AileronFont: String {
     case Regular = "Aileron-Regular"
     case Italic = "Aileron-Italic"
 
+    /*
     case Light = "Aileron-Light"
     case LightItalic = "Aileron-LightItalic"
 
@@ -31,4 +34,5 @@ enum AileronFont: String {
 
     case UltraLight = "Aileron-UltraLight"
     case UltraLightItalic = "Aileron-UltraLightItalic"
+     */
 }

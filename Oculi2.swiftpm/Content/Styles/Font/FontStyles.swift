@@ -107,22 +107,26 @@ extension UIFont {
         }
 
         let fontNames = [
-            "Aileron-Black",
+            /*
+             "Aileron-Black",
             "Aileron-BlackItalic",
             "Aileron-Bold",
             "Aileron-BoldItalic",
             "Aileron-Heavy",
             "Aileron-HeavyItalic",
-            "Aileron-Italic",
             "Aileron-Light",
             "Aileron-LightItalic",
+             */
+            "Aileron-Italic",
             "Aileron-Regular",
             "Aileron-SemiBold",
             "Aileron-SemiBoldItalic",
+            /*
             "Aileron-Thin",
             "Aileron-ThinItalic",
             "Aileron-UltraLight",
             "Aileron-UltraLightItalic",
+             */
             "Conceta",
         ]
         fontNames.forEach { loadFont(named: $0) }

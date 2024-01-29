@@ -56,6 +56,7 @@ public struct InteractionViewWrapper<Content: View>: View {
             .environmentObject(model)
             .environmentObject(model.interactionManager)
             .environmentObject(model.handTrackerModel)
+            .environmentObject(model.handTrackerModel.calibrationModel)
             .environmentObject(model.faceTrackerModel)
             .environmentObject(speechRecognizerModel)
             .padding(.bottom)

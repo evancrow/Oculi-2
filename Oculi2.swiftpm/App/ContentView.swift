@@ -8,13 +8,17 @@ struct ContentView: View {
         ZStack {
             if let currentPage = navigationModel.navigationStack.last {
                 currentPage.page
+                    .id(navigationModel.pageId)
             }
 
             VStack {
                 HStack(alignment: .top, spacing: PaddingSizes._12) {
                     Spacer()
 
-                    if handModel.quality == .NotDetected {
+                    /*
+                    if PermissionModel.shared.getPermissionState(permission: .camera) != .unknown,
+                        handModel.quality == .NotDetected
+                    {
                         Popup(expanded: true, collapsedIcon: "info.circle") {
                             VStack(spacing: PaddingSizes._32) {
                                 Text("Vision Quality Too Low")
@@ -28,6 +32,7 @@ struct ContentView: View {
                             }
                         }
                     }
+                     */
 
                     DebugPopup()
                 }

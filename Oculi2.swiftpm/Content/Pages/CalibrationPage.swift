@@ -16,13 +16,12 @@ enum CalibrationStep {
 
 struct CalibrationPage: View {
     @EnvironmentObject var navigationModel: NavigationModel
-    @ObservedObject private var timer: TimerModel = TimerModel(
-        timerDuration: CalibrationPageDefaults.TotalTimePerPose)
+    @EnvironmentObject var handPoseCalibrationModel: HandPoseCalibrationModel
     @State private var needsToOpenSettings = false
     @State private var step: CalibrationStep {
         didSet {
-            if case .calibration = step {
-                timer.start()
+            if case .calibration(let handPose) = step {
+                handPoseCalibrationModel.startCalibration(for: handPose)
             }
         }
     }
@@ -108,8 +107,12 @@ struct CalibrationPage: View {
         case .calibrationIntro:
             VStack(spacing: PaddingSizes._52) {
                 TextSection(
-                    header: "Tip 1", text: "Place your device 1-2 feet away, in a well lit area")
-                TextSection(header: "Tip 2", text: "Make clear, and concise hand poses")
+                    header: "Tip 1", text: "Use only your dominant hand")
+                TextSection(
+                    header: "Tip 2",
+                    text: "Place your device 1-2 feet away, in a well lit area"
+                )
+                TextSection(header: "Tip 3", text: "Make clear, and concise hand poses")
                 TextSection(header: "Now", text: "When ready, click start to began calibration")
 
                 Button {
@@ -120,14 +123,24 @@ struct CalibrationPage: View {
             }.multilineTextAlignment(.center)
         case .calibration(let handPose):
             VStack(spacing: PaddingSizes._52) {
-                Text("Hold for \(timer.timeRemaining)")
+                Text("Hold for \(handPoseCalibrationModel.timeRemaining)")
                     .font(FontStyles.Title2.font)
 
                 Button {
+                    handPoseCalibrationModel.skipCalibration()
                     step = .done
                 } label: {
                     Text("Skip")
                 }.buttonStyle(UnderlinedButtonStyle())
+            }.onChange(of: handPoseCalibrationModel.timeRemaining) { newValue in
+                if newValue <= 0 {
+                    if let nextPose = handPose.nextPose {
+                        step = .calibration(handPose: nextPose)
+                    } else {
+                        handPoseCalibrationModel.finishCalibration()
+                        step = .done
+                    }
+                }
             }
         case .done:
             Button {
@@ -155,7 +168,10 @@ struct CalibrationPage: View {
     }
 
     // MARK: - init
-    fileprivate init(step: CalibrationStep, needsToOpenSettings: Bool = false) {
+    fileprivate init(
+        step: CalibrationStep,
+        needsToOpenSettings: Bool = false
+    ) {
         self._step = State(initialValue: step)
         self._needsToOpenSettings = State(initialValue: needsToOpenSettings)
     }
@@ -169,21 +185,33 @@ struct CalibrationPage: View {
 }
 
 #Preview {
-    CalibrationPage(step: .permission)
+    CalibrationPage(
+        step: .permission
+    ).environmentObject(
+        NavigationModel()
+    )
 }
 
 #Preview {
-    CalibrationPage(step: .permission)
+    CalibrationPage(
+        step: .calibrationIntro
+    ).environmentObject(
+        NavigationModel()
+    )
 }
 
 #Preview {
-    CalibrationPage(step: .calibrationIntro)
+    CalibrationPage(
+        step: .calibration(handPose: .flat)
+    ).environmentObject(
+        NavigationModel()
+    )
 }
 
 #Preview {
-    CalibrationPage(step: .calibration(handPose: .flat))
-}
-
-#Preview {
-    CalibrationPage(step: .done)
+    CalibrationPage(
+        step: .done
+    ).environmentObject(
+        NavigationModel()
+    )
 }
