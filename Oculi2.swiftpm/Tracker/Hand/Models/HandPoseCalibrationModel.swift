@@ -19,12 +19,12 @@ struct HandTrackerCalibrationDefaults {
 class HandPoseCalibrationModel: ObservableObject {
     @Published public private(set) var timeRemaining: Int = HandTrackerCalibrationDefaults
         .TotalTimePerPose
+    @Published public private(set) var calibrationState: HandCalibrationState = .NotCalibrated
 
     private let timer: TimerModel = TimerModel(
         timerDuration: HandTrackerCalibrationDefaults.TotalTimePerPose
     )
     private var timerListener: AnyCancellable?
-    private var calibrationState: HandCalibrationState = .NotCalibrated
     private var hand: Hand?
     private var calibrationData: [HandPose: [Hand]] = [:]
 
@@ -65,9 +65,6 @@ class HandPoseCalibrationModel: ObservableObject {
             }
 
             HandPoseMargins.UpdateMargins(for: pose, margins: totalTipDistancesAverage)
-
-            print("\n-- AVERAGE FOR POSE: \(pose.title) --")
-            print("TIP DISTANCES: ", totalTipDistancesAverage)
         }
     }
 

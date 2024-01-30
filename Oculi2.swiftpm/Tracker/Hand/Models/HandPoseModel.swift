@@ -66,11 +66,9 @@ enum HandPose: String, CaseIterable {
 struct HandPoseMargins {
     static private let Buffer: CGFloat = 0.055
     static private(set) var FlatMargins: [CGFloat] = [0.23, 0.08, 0.09, 0.13]
-    static let FlatMarginMinimums: [CGFloat] = [0.1]
-
     static private(set) var PinchMargins: [CGFloat] = [0.05, 0.03]
-    static private(set) var PointMargins: [CGFloat] = [0.3]
-    static private(set) var TwoPointMargins: [CGFloat] = [0.15, 0.08, 0.35]
+    static private(set) var PointMargins: [CGFloat] = [0.3, 0.3]
+    static private(set) var TwoPointMargins: [CGFloat] = [0.15, 0.08, 0.35, 0.04]
 
     private static func updateFlatMargins(margins: [CGFloat]) {
         FlatMargins = margins
@@ -105,6 +103,7 @@ struct HandPoseMargins {
             margins[0] -= Buffer
             margins[1] += Buffer
             margins[2] -= Buffer
+            margins[3] += Buffer
 
             updateTwoPointMargins(margins: margins)
         case .none:
@@ -115,32 +114,50 @@ struct HandPoseMargins {
 
 class HandPoseModel {
     static func predictHandPose(from hand: Hand) -> HandPose {
-        // Check for a flat hand.
-        if hand.tipDistances.enumerated().allSatisfy({ $1 < HandPoseMargins.FlatMargins[$0] })
-            && hand.tipDistances[0] > HandPoseMargins.FlatMarginMinimums[0]
-        {
+        func checkFlatHandPose(hand: Hand) -> Bool {
+            return hand.tipDistances.enumerated().allSatisfy {
+                $1 < HandPoseMargins.FlatMargins[$0]
+            }
+        }
+
+        func checkPinchPose(hand: Hand) -> Bool {
+            // Check if the thumb-index distance is within the specified pinch margin
+            // and if the index-middle distance is more than the second pinch margin.
+            return hand.tipDistances[0] < HandPoseMargins.PinchMargins[0]
+                && hand.tipDistances[1] > HandPoseMargins.PinchMargins[1]
+        }
+
+        func checkPointPose(hand: Hand) -> Bool {
+            // Check if the first distance (thumb to index) is greater than the point margin.
+            // This assumes that in a point pose, the index finger is significantly extended.
+            // Do the same for the index to middle finger.
+            return hand.tipDistances[0] > HandPoseMargins.PointMargins[0]
+                && hand.tipDistances[1] > HandPoseMargins.PointMargins[1]
+        }
+
+        // Method for checking the 'twoFingerPoint' pose.
+        func checkTwoFingerPointPose(hand: Hand) -> Bool {
+            // Check if the first two distances match the criteria for a two finger point.
+            // Assuming this pose is defined by the index and middle fingers being extended.
+            return hand.tipDistances[0] > HandPoseMargins.TwoPointMargins[0]
+                && hand.tipDistances[1] < HandPoseMargins.TwoPointMargins[1]
+                && hand.tipDistances[2] > HandPoseMargins.TwoPointMargins[2]
+                && hand.tipDistances[3] < HandPoseMargins.TwoPointMargins[3]
+        }
+
+        if checkFlatHandPose(hand: hand) {
             return .flat
         }
 
-        // Check for pinch.
-        if hand.tipDistances[0] < HandPoseMargins.PinchMargins[0]
-            && hand.tipDistances[1] > HandPoseMargins.PinchMargins[1]
-        {
+        if checkPinchPose(hand: hand) {
             return .pinch
         }
 
-        // Check for pointing.
-        if hand.tipDistances[0] > HandPoseMargins.PointMargins[0]
-            && hand.tipDistances[1] > HandPoseMargins.PointMargins[0]
-        {
+        if checkPointPose(hand: hand) {
             return .point
         }
 
-        // Check for two fingers pointing.
-        if hand.tipDistances[0] > HandPoseMargins.TwoPointMargins[0]
-            && hand.tipDistances[1] < HandPoseMargins.TwoPointMargins[1]
-            && hand.tipDistances[2] > HandPoseMargins.TwoPointMargins[2]
-        {
+        if checkTwoFingerPointPose(hand: hand) {
             return .twoFinger
         }
 

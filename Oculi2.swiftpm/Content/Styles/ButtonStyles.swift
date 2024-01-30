@@ -15,6 +15,7 @@ struct DefaultButtonStyle: ButtonStyle {
             .padding(.horizontal, 90)
             .padding(.vertical, 22)
             .background(Color.Oculi.Pink)
+            .foregroundStyle(Color.Oculi.Button.Label)
             .opacity(configuration.isPressed ? 0.7 : 1)
     }
 }

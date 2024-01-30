@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum HandCalibrationState {
+enum HandCalibrationState: Equatable {
     case NotCalibrated
     case Calibrated
     case CalibratingChangePose(pose: HandPose)
