@@ -11,7 +11,7 @@ import SwiftUI
 class TapListener: InteractionListener {
     public let numberOfTaps: Int
 
-    override init(
+    init(
         id: String = "",
         numberOfTaps: Int = 1,
         boundingBox: CGRect,

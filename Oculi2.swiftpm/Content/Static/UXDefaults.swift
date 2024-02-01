@@ -17,5 +17,6 @@ public struct UXDefaults {
     internal static let cursorHeight: CGFloat = 30
     /// How much to increase the speed of the cursor by.
     /// `Width` is how much to increase `x` by and `height` for `y`.
-    public static var movementMultiplier: CGSize = CGSize(width: 20, height: 23)
+    public static var movementMultiplier: CGSize = CGSize(width: 1000, height: 1300)
+    public static let cursorShowTime: Double = 2
 }

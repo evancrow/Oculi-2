@@ -165,7 +165,7 @@ public class FaceTrackerModel: ObservableObject {
     // Called when the user stops blinking
     private func blinksEnded() {
         let numberOfBlinks = currentNumberOfBlinks + 1
-        // interactionManager.onBlink(onBlink: (numberOfBlinks, getCursorBoundingBox()), isTracking: isTracking)
+        interactionManager.onBlink(numberOfBlinks: numberOfBlinks, isTracking: isTracking)
     }
 
     // Calibration
@@ -254,8 +254,8 @@ public class FaceTrackerModel: ObservableObject {
             }
         }()
 
-        let newXOffset = (xOffset * UXDefaults.movementMultiplier.width)
-        let newYOffset = (yOffset * UXDefaults.movementMultiplier.height)
+        let newXOffset = (xOffset * LegacyUXDefaults.movementMultiplier.width)
+        let newYOffset = (yOffset * LegacyUXDefaults.movementMultiplier.height)
 
         interactionManager.moveCursorOffset(by: CGPoint(x: newXOffset, y: newYOffset))
     }

@@ -11,7 +11,7 @@ import Vision
 
 struct HandTrackerDefaults {
     /// Number of times a pose must be detected before it is confirmed to be active.
-    static let ConfirmationAmount = 3
+    static let ConfirmationAmount = 4
 
     static let MaximumPinchSeperationTime: Double = 1
     /// Duration (in seconds) of how long a pinch must be before it is confirmed to be "long".
@@ -42,6 +42,7 @@ class HandTrackerModel: ObservableObject {
     // MARK: - Properties
     // Hand pose data.
     private var handDataForCurrentPose: [Hand] = []
+    private var pastHands: [Hand] = []
     private var pastPoses: [HandPose] = []
     // Pinch data.
     private var pinchGroupTimer: Timer? = nil
@@ -77,10 +78,9 @@ class HandTrackerModel: ObservableObject {
     }
 
     /// Using X and Y delta changes from the point interaction, moves an on screen cursor.
-    private func onPoint() {
-        let indexLocations: [CGPoint] = getIndexLocations()
-        guard let currentLocation = indexLocations.last,
-            let previousLocation = indexLocations.dropLast().last
+    private func moveCursor() {
+        guard let currentLocation = pastHands.last?.tipLocation(finger: .index),
+            let previousLocation = pastHands.dropLast().last?.tipLocation(finger: .index)
         else {
             return
         }
@@ -93,7 +93,7 @@ class HandTrackerModel: ObservableObject {
         interactionManager.moveCursorOffset(
             by: .init(
                 x: xDifference * UXDefaults.movementMultiplier.width,
-                y: yDifference * UXDefaults.movementMultiplier.height
+                y: -yDifference * UXDefaults.movementMultiplier.height
             )
         )
     }
@@ -130,46 +130,13 @@ class HandTrackerModel: ObservableObject {
 
         checkForTap()
     }
-
-    @discardableResult
-    private func checkForTap() -> Bool {
-        // If the previous pose was a pinch, then detect if a "tap" was intended.
-        func checkPinchType() {
-            if pinchDuration >= HandTrackerDefaults.LongPinchDuration {
-                interactionManager.onLongTap(duration: pinchDuration)
-            } else {
-                interactionManager.onTap(numberOfTaps: currentNumberOfPinches)
-            }
-
-            // Add another none pose so that the tap is not re-recoginized.
-            pastPoses.append(.none)
+    
+    private func checkForTap() {
+        if pinchDuration >= HandTrackerDefaults.LongPinchDuration {
+            interactionManager.onLongTap(duration: pinchDuration)
+        } else {
+            interactionManager.onTap(numberOfTaps: currentNumberOfPinches)
         }
-
-        let poses = pastPoses.dropLast()
-        if case .pinch = poses.last {
-            return true
-            
-            /*
-            let numberOfPoses = poses.count
-
-            // Need at least 3 poses in the history to detect intent [point, none, pinch] or possibly [point, pinch].
-            // A tap can only come from a point and then pinch.
-            if poses.count == 2,
-                poses[(numberOfPoses - 2)...(numberOfPoses - 1)] == [.point, .pinch]
-            {
-                checkPinchType()
-            } else if numberOfPoses >= 3,
-                poses[(numberOfPoses - 3)...(numberOfPoses - 1)] == [.point, .none, .pinch]
-                    || poses[(numberOfPoses - 2)...(numberOfPoses - 1)] == [.point, .pinch]
-            {
-                checkPinchType()
-            } else {
-                return false
-            }
-             */
-        }
-
-        return false
     }
 
     @discardableResult
@@ -200,20 +167,30 @@ class HandTrackerModel: ObservableObject {
 extension HandTrackerModel: HandTrackerDelegate {
     func handDidChange(to value: Hand) {
         self.currentHand = value
-        self.calibrationModel.receivedNewHand(data: value)
+        self.pastHands.append(value)
         self.handDataForCurrentPose.append(value)
-
-        if case .confirmedPose(let handPose) = state {
+        self.calibrationModel.receivedNewHand(data: value)
+        
+        switch state {
+        case .confirmedPose(let handPose):
             switch handPose {
             case .pinch:
                 onPinch()
-            case .point:
-                onPoint()
             case .twoFinger:
                 checkForScroll()
             case .none:
+                moveCursor()
                 onNone()
             }
+        case .possiblePose(let handPose, _):
+            switch handPose {
+            case .none:
+                moveCursor()
+            default:
+                return
+            }
+        default:
+            moveCursor()
         }
     }
 

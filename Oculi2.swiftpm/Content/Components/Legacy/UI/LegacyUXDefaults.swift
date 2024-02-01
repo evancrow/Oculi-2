@@ -37,7 +37,7 @@ public struct LegacyUXDefaults {
     internal static let cursorHeight: CGFloat = 30
     /// How much to increase the speed of the cursor by.
     /// `Width` is how much to increase `x` by and `height` for `y`.
-    public static var movmentMultiplier: CGSize = CGSize(width: 20, height: 23)
+    public static var movementMultiplier: CGSize = CGSize(width: 20, height: 23)
 
     // MARK: - UI
     internal static let backgroundOpacity: CGFloat = 0.2

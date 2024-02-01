@@ -9,6 +9,8 @@ import SwiftUI
 
 public struct InteractionViewWrapper<Content: View>: View {
     @ObservedObject var model: TrackerModel
+    @ObservedObject var calibrationModel: HandPoseCalibrationModel
+    @ObservedObject var interactionManager: InteractionManager
     @ObservedObject var permissionModel = PermissionModel.shared
     @ObservedObject var speechRecognizerModel = SpeechRecognizerModel()
 
@@ -53,16 +55,16 @@ public struct InteractionViewWrapper<Content: View>: View {
                     }
                     Spacer()
                 }
-
-                if case .confirmedPose(handPose: .point) = model.handTrackerModel.state {
-                    Cursor(offset: model.interactionManager.cursorOffset)
+                
+                if interactionManager.showCursor && calibrationModel.calibrationState == .Calibrated {
+                    Cursor(offset: interactionManager.cursorOffset)
                 }
             }
             .environmentObject(geometryProxyValue)
             .environmentObject(model)
-            .environmentObject(model.interactionManager)
+            .environmentObject(interactionManager)
             .environmentObject(model.handTrackerModel)
-            .environmentObject(model.handTrackerModel.calibrationModel)
+            .environmentObject(calibrationModel)
             .environmentObject(model.faceTrackerModel)
             .environmentObject(model.avModel)
             .environmentObject(speechRecognizerModel)
@@ -94,6 +96,8 @@ public struct InteractionViewWrapper<Content: View>: View {
 
     public init(trackerModel: TrackerModel, content: () -> Content) {
         self.model = trackerModel
+        self.interactionManager = trackerModel.interactionManager
+        self.calibrationModel = trackerModel.handTrackerModel.calibrationModel
         self.content = content()
     }
 }
