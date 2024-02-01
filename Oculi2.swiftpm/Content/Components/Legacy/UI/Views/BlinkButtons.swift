@@ -41,7 +41,7 @@ struct BlinkButton<Label: View>: View {
     }
 
     init(
-        numberOfBlinks: Int = UXDefaults.defaultBlinksForInteraction,
+        numberOfBlinks: Int = LegacyUXDefaults.defaultBlinksForInteraction,
         name: String,
         action: @escaping () -> Void,
         @ViewBuilder label: () -> Label

@@ -3,6 +3,9 @@ import SwiftUI
 struct ContentView: View {
     @ObservedObject var navigationModel: NavigationModel = NavigationModel()
     @EnvironmentObject var handModel: HandTrackerModel
+    @EnvironmentObject var avModel: AVModel
+
+    @State private var popupExpanded = true
 
     public var body: some View {
         ZStack {
@@ -15,24 +18,20 @@ struct ContentView: View {
                 HStack(alignment: .top, spacing: PaddingSizes._12) {
                     Spacer()
 
-                    /*
-                    if PermissionModel.shared.getPermissionState(permission: .camera) != .unknown,
-                        handModel.quality == .NotDetected
-                    {
-                        Popup(expanded: true, collapsedIcon: "info.circle") {
+                    if avModel.failedToConfigure {
+                        Popup(expanded: $popupExpanded, collapsedIcon: "info.circle") {
                             VStack(spacing: PaddingSizes._32) {
-                                Text("Vision Quality Too Low")
+                                Text("Unsupported Device")
                                     .font(FontStyles.Title2.font)
 
                                 Text(
-                                    "Oculi can’t detect your hands. Make sure you’re in a well lit area and 1-2 feet away from your device."
+                                    "Oculi cannot work on your device because there is no accessible camera. Please try from your iPad or iPhone."
                                 )
                                 .font(FontStyles.Body.font)
                                 .frame(maxWidth: 250)
                             }
                         }
                     }
-                     */
 
                     DebugPopup()
                 }

@@ -25,7 +25,7 @@ struct ErrorView: View {
                     .foregroundColor(.white)
                     .background(
                         Color.blue
-                            .cornerRadius(UXDefaults.backgroundCornerRadius)
+                            .cornerRadius(LegacyUXDefaults.backgroundCornerRadius)
                     )
             }
         }
@@ -48,8 +48,8 @@ struct ErrorView: View {
         .foregroundColor(.blue)
         .background(
             Color.blue
-                .opacity(UXDefaults.backgroundOpacity)
-                .cornerRadius(UXDefaults.backgroundCornerRadius)
+                .opacity(LegacyUXDefaults.backgroundOpacity)
+                .cornerRadius(LegacyUXDefaults.backgroundCornerRadius)
         ).padding(.horizontal)
     }
 }

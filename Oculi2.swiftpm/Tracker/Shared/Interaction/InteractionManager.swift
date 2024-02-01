@@ -9,25 +9,76 @@ import CoreGraphics
 import SwiftUI
 
 public class InteractionManager: ObservableObject {
-    public typealias onBlink = (numberOfBlinks: Int, boundingBox: CGRect)
-    public typealias onLongBlink = (duration: Int, boundingBox: CGRect)
+    // MARK: - Cursor
+    private var viewWidth: CGFloat = 0
+    private var viewHeight: CGFloat = 0
 
-    // Listeners
-    private var interactionListeners = [InteractionListener]()
-    private var blinkListeners: [BlinkListener] {
-        interactionListeners.compactMap { $0 as? BlinkListener }
+    @Published private(set) var cursorOffset: CGPoint = .zero {
+        didSet {
+            onCursorOffsetChanged()
+        }
     }
-    private var longBlinkListeners: [LongBlinkListener] {
-        interactionListeners.compactMap { $0 as? LongBlinkListener }
+
+    private func checkIfOffsetIsInBounds(_ newOffset: CGPoint) -> Bool {
+        let padding: CGFloat = PaddingSizes._52
+
+        // Positions relative to the global frame
+        let origin = getOrigin()
+        let expectedX = origin.x + cursorOffset.x + newOffset.x
+        let expectedY = origin.y + cursorOffset.y + newOffset.y
+
+        let withinX = expectedX < (viewWidth - padding) && expectedX > padding
+        let withinY = expectedY < (viewHeight - padding) && expectedY > padding
+
+        return withinX && withinY
     }
-    private var hoverListeners: [HoverListener] {
-        interactionListeners.compactMap { $0 as? HoverListener }
+
+    private func getCursorBoundingBox() -> CGRect {
+        let origin = getOrigin()
+        let currentX = origin.x + cursorOffset.x
+        let currentY = origin.y + cursorOffset.y
+        let offsetForMin = UXDefaults.cursorHeight / 2
+
+        let boundingBox = CGRect(
+            x: currentX - offsetForMin,
+            y: currentY - offsetForMin,
+            width: UXDefaults.cursorHeight,
+            height: UXDefaults.cursorHeight
+        )
+
+        return boundingBox
     }
-    private var quickActionListeners: [QuickActionListener] {
-        interactionListeners.compactMap { $0 as? QuickActionListener }
+
+    public func setCursorOffset(to point: CGPoint) {
+        if checkIfOffsetIsInBounds(point) {
+            cursorOffset = point
+        }
+    }
+
+    public func moveCursorOffset(by value: CGPoint) {
+        if checkIfOffsetIsInBounds(value) {
+            withAnimation(.linear) {
+                cursorOffset.x += value.x
+                cursorOffset.y += value.y
+            }
+        }
+    }
+
+    public func resetCursorOffset() {
+        if viewWidth > 0 && viewHeight > 0 {
+            cursorOffset = getOrigin()
+        } else {
+            cursorOffset = .zero
+        }
+    }
+
+    private func getOrigin() -> CGPoint {
+        return CGPoint(x: viewWidth / 2, y: viewHeight / 2)
     }
 
     // MARK: - Listeners
+    private var interactionListeners = [InteractionListener]()
+
     public func addListener(_ listener: InteractionListener) {
         interactionListeners.append(listener)
     }
@@ -41,12 +92,38 @@ public class InteractionManager: ObservableObject {
         addListener(listener)
     }
 
-    // MARK: - Blink Methods
-    public func onBlink(onBlink: onBlink, isTracking: Bool) {
-        let numberOfBlinks = onBlink.numberOfBlinks
-        let boundingBox = onBlink.boundingBox
+    fileprivate func runListenersWithMatchingBoundingBox(
+        boundingBox: CGRect,
+        possibleListeners: [InteractionListener]
+    ) {
+        // Run the action for each listener if the cursor is inside the listener's view.
+        for listener in possibleListeners where listener.boundingBox.contains(boundingBox.origin) {
+            listener.action()
+        }
+    }
 
-        if numberOfBlinks == UXDefaults.quickActionBlinks {
+    // MARK: - Config
+    public func updateViewValues(_ size: CGSize) {
+        self.viewWidth = size.width
+        self.viewHeight = size.height
+    }
+}
+
+// MARK: - Face
+extension InteractionManager {
+    private var blinkListeners: [BlinkListener] {
+        interactionListeners.compactMap { $0 as? BlinkListener }
+    }
+    private var longBlinkListeners: [LongBlinkListener] {
+        interactionListeners.compactMap { $0 as? LongBlinkListener }
+    }
+    private var quickActionListeners: [QuickActionListener] {
+        interactionListeners.compactMap { $0 as? QuickActionListener }
+    }
+
+    // MARK: - Blink Methods
+    public func onBlink(numberOfBlinks: Int, isTracking: Bool) {
+        if numberOfBlinks == LegacyUXDefaults.quickActionBlinks {
             handleQuickActions(isTracking: isTracking)
             return
         }
@@ -59,39 +136,18 @@ public class InteractionManager: ObservableObject {
         // Filter listeners to those that match the number of blinks.
         let possibleListeners = blinkListeners.filter { $0.numberOfBlinks == numberOfBlinks }
         runListenersWithMatchingBoundingBox(
-            boundingBox: boundingBox,
-            possibleListeners: possibleListeners)
+            boundingBox: getCursorBoundingBox(),
+            possibleListeners: possibleListeners
+        )
     }
 
-    public func onLongBlink(onLongBlink: onLongBlink) {
-        let duration = onLongBlink.duration
-        let boundingBox = onLongBlink.boundingBox
-
+    public func onLongBlink(duration: Int) {
         // Filter listeners to those that match the number of blinks.
         let possibleListeners = longBlinkListeners.filter { $0.duration == duration }
         runListenersWithMatchingBoundingBox(
-            boundingBox: boundingBox,
-            possibleListeners: possibleListeners)
-    }
-
-    private func runListenersWithMatchingBoundingBox(
-        boundingBox: CGRect,
-        possibleListeners: [InteractionListener]
-    ) {
-        // Run the action for each listener if the cursor is inside the listener's view.
-        for listener in possibleListeners where listener.boundingBox.contains(boundingBox.origin) {
-            listener.action()
-        }
-    }
-
-    // MARK: - Hovering
-    public func onCursorOffsetChanged(boundingBox: CGRect) {
-        // Updates each listner if the cursor is hovering over it's view.
-        for listener in hoverListeners {
-            withAnimation {
-                listener.isHovering = listener.boundingBox.contains(boundingBox.origin)
-            }
-        }
+            boundingBox: getCursorBoundingBox(),
+            possibleListeners: possibleListeners
+        )
     }
 
     // MARK: - Quick Actions
@@ -104,6 +160,96 @@ public class InteractionManager: ObservableObject {
             if listener.conditionsMet(), isTracking || listener.overrideIsTracking {
                 listener.action()
                 break
+            }
+        }
+    }
+}
+
+// MARK: - Hand
+extension InteractionManager {
+    private var tapListeners: [TapListener] {
+        interactionListeners.compactMap { $0 as? TapListener }
+    }
+    private var longTapListeners: [LongTapListener] {
+        interactionListeners.compactMap { $0 as? LongTapListener }
+    }
+    private var scrollListeners: [ScrollListener] {
+        interactionListeners.compactMap { $0 as? ScrollListener }
+    }
+    private var zoomListeners: [ZoomListener] {
+        interactionListeners.compactMap { $0 as? ZoomListener }
+    }
+
+    // MARK: - Tap
+    public func onTap() {
+        // Filter listeners to those that match the number of blinks.
+        runListenersWithMatchingBoundingBox(
+            boundingBox: getCursorBoundingBox(),
+            possibleListeners: tapListeners
+        )
+
+        print(">>> TAP <<<")
+        print("Bounding Box:", getCursorBoundingBox())
+    }
+
+    public func onLongTap(duration: Int) {
+        let possibleListeners = longTapListeners.filter { $0.duration == duration }
+        runListenersWithMatchingBoundingBox(
+            boundingBox: getCursorBoundingBox(),
+            possibleListeners: possibleListeners
+        )
+
+        print(">>> LONG TAP <<<")
+        print("Duration:", duration)
+        print("Bounding Box:", getCursorBoundingBox())
+    }
+
+    // MARK: - Scroll
+    public func onScroll(direction: Axis, distance: CGFloat) {
+        let possibleListeners = scrollListeners.filter { $0.direction == direction }
+        possibleListeners.forEach {
+            $0.distance = distance
+        }
+        runListenersWithMatchingBoundingBox(
+            boundingBox: getCursorBoundingBox(),
+            possibleListeners: possibleListeners
+        )
+
+        print(">>> SCROLL <<<")
+        print("Direction:", direction)
+        print("Distance:", distance)
+        print("Bounding Box:", getCursorBoundingBox())
+    }
+
+    // MARK: - Zoom
+    public func onZoom(scale: Double) {
+        let possibleListeners = zoomListeners
+        possibleListeners.forEach {
+            $0.scale = scale
+        }
+        runListenersWithMatchingBoundingBox(
+            boundingBox: getCursorBoundingBox(),
+            possibleListeners: possibleListeners
+        )
+
+        print(">>> ZOOM <<<")
+        print("Scale:", scale)
+        print("Bounding Box:", getCursorBoundingBox())
+    }
+}
+
+// MARK: - Shared
+extension InteractionManager {
+    private var hoverListeners: [HoverListener] {
+        interactionListeners.compactMap { $0 as? HoverListener }
+    }
+
+    fileprivate func onCursorOffsetChanged() {
+        let boundingBox = getCursorBoundingBox()
+        // Updates each listner if the cursor is hovering over it's view.
+        for listener in hoverListeners {
+            withAnimation {
+                listener.isHovering = listener.boundingBox.contains(boundingBox.origin)
             }
         }
     }

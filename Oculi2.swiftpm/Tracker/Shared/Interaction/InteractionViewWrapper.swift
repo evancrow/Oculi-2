@@ -43,14 +43,20 @@ public struct InteractionViewWrapper<Content: View>: View {
 
     public var body: some View {
         GeometryReader { geom in
-            VStack {
-                Spacer()
-                HStack {
+            ZStack {
+                VStack {
                     Spacer()
-                    content
+                    HStack {
+                        Spacer()
+                        content
+                        Spacer()
+                    }
                     Spacer()
                 }
-                Spacer()
+
+                if case .confirmedPose(handPose: .point) = model.handTrackerModel.state {
+                    Cursor(offset: model.interactionManager.cursorOffset)
+                }
             }
             .environmentObject(geometryProxyValue)
             .environmentObject(model)
@@ -58,15 +64,18 @@ public struct InteractionViewWrapper<Content: View>: View {
             .environmentObject(model.handTrackerModel)
             .environmentObject(model.handTrackerModel.calibrationModel)
             .environmentObject(model.faceTrackerModel)
+            .environmentObject(model.avModel)
             .environmentObject(speechRecognizerModel)
             .padding(.bottom)
             .useEffect(deps: geom.size) { _ in
-                // model.updateViewValues(geom.size)
+                model.interactionManager.updateViewValues(geom.size)
                 geometryProxyValue.geom = geom
             }.useEffect(deps: geom.safeAreaInsets.bottom) { bottomSafeArea in
                 keyboardVisible = bottomSafeArea > 100
             }.onChange(of: keyboardVisible) { _ in
                 // model.keyboardVisible = keyboardVisible
+            }.onAppear {
+                UIApplication.shared.isIdleTimerDisabled = true
             }
         }
 
@@ -74,7 +83,7 @@ public struct InteractionViewWrapper<Content: View>: View {
         ZStack {
             if permissionModel.nextRequiredPermission == nil {
                 if !keyboardVisible && model.isTracking {
-                    Cursor(offset: model.offset)
+
                 }
             } else if permissionModel.nextRequiredPermission?.1 != .unknown {
                 permissionErrorView

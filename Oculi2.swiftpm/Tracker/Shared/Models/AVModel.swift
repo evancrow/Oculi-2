@@ -10,6 +10,7 @@ import Combine
 import Vision
 
 class AVModel: NSObject, ObservableObject {
+    @Published private(set) var failedToConfigure = false
     var delegate: AVModelDelegate!
 
     private var captureSession: AVCaptureSession?
@@ -39,6 +40,7 @@ class AVModel: NSObject, ObservableObject {
                 return
             } catch {
                 print("Error setting up AVCapture session: ", error.localizedDescription)
+                failedToConfigure = true
             }
 
             self.teardownAVCapture()

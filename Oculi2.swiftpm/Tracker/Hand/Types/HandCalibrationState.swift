@@ -12,4 +12,5 @@ enum HandCalibrationState: Equatable {
     case Calibrated
     case CalibratingChangePose(pose: HandPose)
     case CalibratingPose(pose: HandPose)
+    case Failed
 }

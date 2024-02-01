@@ -12,7 +12,7 @@ struct Cursor: View {
 
     var body: some View {
         Circle()
-            .foregroundColor(.blue)
+            .foregroundStyle(Color.Oculi.Pink)
             .frame(width: UXDefaults.cursorHeight, height: UXDefaults.cursorHeight)
             .offset(x: offset.x, y: offset.y)
     }

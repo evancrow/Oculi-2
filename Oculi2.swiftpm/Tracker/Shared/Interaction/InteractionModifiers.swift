@@ -48,10 +48,10 @@ extension View {
     func onBlink(
         name: String,
         interactionManager: InteractionManager,
-        numberOfBlinks: Int = UXDefaults.defaultBlinksForInteraction,
+        numberOfBlinks: Int = LegacyUXDefaults.defaultBlinksForInteraction,
         action: @escaping () -> Void
     ) -> some View {
-        if numberOfBlinks == UXDefaults.quickActionBlinks {
+        if numberOfBlinks == LegacyUXDefaults.quickActionBlinks {
             fatalError(
                 "\(numberOfBlinks) blinks is reserved for Quick Actions. Change the number of blinks or use onQuickAction."
             )
@@ -136,7 +136,7 @@ extension View {
         interactionManager: InteractionManager,
         priority: Double = 0.5,
         overrideIsTracking: Bool = false,
-        cornerRadius: CGFloat = UXDefaults.backgroundCornerRadius,
+        cornerRadius: CGFloat = LegacyUXDefaults.backgroundCornerRadius,
         conditionsMet: @escaping () -> Bool,
         action: @escaping () -> Void
     ) -> some View {

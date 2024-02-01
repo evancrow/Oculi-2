@@ -9,14 +9,25 @@ import Foundation
 import SwiftUI
 import Vision
 
+struct HandTrackerDefaults {
+    /// Number of times a pose must be detected before it is confirmed to be active.
+    static let ConfirmationAmount = 3
+    /// Duration (in seconds) of how long a pinch must be before it is confirmed to be "long".
+    /// Similar to a long tap.
+    static let LongPinchDuration = 2
+}
+
 class HandTrackerModel: ObservableObject {
     // MARK: - Published
     @Published public private(set) var quality: VisionQualityState = .NotDetected
     @Published public private(set) var currentHand: Hand?
-    @Published public private(set) var currentHandPose: HandPose = .none {
+    @Published public private(set) var state: HandTrackerState = .none {
         didSet {
             handDataForCurrentPose = []
-            pastPoses.append(currentHandPose)
+
+            if case .confirmedPose(let handPose) = state {
+                pastPoses.append(handPose)
+            }
         }
     }
 
@@ -24,18 +35,23 @@ class HandTrackerModel: ObservableObject {
     private let interactionManager: InteractionManager
     public let calibrationModel: HandPoseCalibrationModel = HandPoseCalibrationModel()
 
-    // MARK: - Data
+    // MARK: - Properties
+    // Hand pose data.
     private var handDataForCurrentPose: [Hand] = []
     private var pastPoses: [HandPose] = []
+    // Pinch data.
+    private var pinchDurationTimer: Timer? = nil
+    private var pinchDuration = 0
 
     // MARK: - Interactions
+    /// Maps to all the index tip points for the current pose.
     private func getIndexLocations() -> [CGPoint] {
         handDataForCurrentPose.map {
             $0.tipLocation(finger: .index)
         }
     }
 
-    // Calculates the total X/Y delta for the current pose.
+    /// Calculates the total delta of X and Y for the current pose.
     private func getXYDelta() -> (CGFloat, CGFloat, Int) {
         let indexLocations: [CGPoint] = getIndexLocations()
 
@@ -54,39 +70,8 @@ class HandTrackerModel: ObservableObject {
         return (totalXChange, totalYChange, xDifferences.count)
     }
 
-    private func checkForPan() {
-        let (totalXChange, totalYChange, numberOfPoints) = getXYDelta()
-        // Determine if the changes are significant.
-        let xPanThreshold: CGFloat = 10  // Set a threshold for significant change in x.
-        let yPanThreshold: CGFloat = 10  // Set a threshold for significant change in y.
-
-        guard numberOfPoints > 5 else {
-            return
-        }
-
-        print("TOTALX CHANGE: ", totalXChange)
-        print("TOTALY CHANGE: ", totalYChange)
-
-        // Check for horizontal pan.
-        if abs(totalXChange) > CGFloat(numberOfPoints) * xPanThreshold {
-            if totalXChange > 0 {
-                print("Horizontal pan to the right detected")
-            } else {
-                print("Horizontal pan to the left detected")
-            }
-        }
-
-        // Check for vertical pan.
-        if abs(totalYChange) > CGFloat(numberOfPoints) * yPanThreshold {
-            if totalYChange > 0 {
-                print("Vertical pan downwards detected")
-            } else {
-                print("Vertical pan upwards detected")
-            }
-        }
-    }
-
-    private func moveCursor() {
+    /// Using X and Y delta changes from the point interaction, moves an on screen cursor.
+    private func onPoint() {
         let indexLocations: [CGPoint] = getIndexLocations()
         guard let currentLocation = indexLocations.last,
             let previousLocation = indexLocations.dropLast().last
@@ -98,24 +83,27 @@ class HandTrackerModel: ObservableObject {
         // Calculate the differences in x and y coordinates.
         let xDifference = currentLocation.x - previousLocation.x
         let yDifference = currentLocation.y - previousLocation.y
+
+        interactionManager.moveCursorOffset(
+            by: .init(
+                x: xDifference * UXDefaults.movementMultiplier.width,
+                y: yDifference * UXDefaults.movementMultiplier.height
+            )
+        )
     }
 
-    private func checkForTap() {
-        guard currentHandPose == .pinch else {
-            return
-        }
-        
-        if pastPoses.last == .point {
-            print("Tap")
-            // return true
-        } else if pastPoses.count >= 3, pastPoses[pastPoses.count - 2...pastPoses.count - 1] == [.pinch, .none] {
-            print("Tap 2")
-            // return true
+    private func onPinch() {
+        // If there is not already a timer tracking the pinch, add one.
+        if pinchDurationTimer == nil {
+            pinchDuration = 0
+            pinchDurationTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+                self.pinchDuration += 1
+            }
         }
     }
 
     private func checkForZoom() {
-        // Idk what to do here right now.
+        // TODO: Watch for zoom.
     }
 
     private func checkForScroll() {
@@ -125,12 +113,52 @@ class HandTrackerModel: ObservableObject {
             return
         }
 
-        // Find the x/y delta.
-        // Which ever is more significant is the direction of scroll.
         if totalYChange >= totalXChange {
-            print("YScroll:", totalYChange)
+            interactionManager.onScroll(
+                direction: .vertical,
+                distance: totalYChange
+            )
         } else {
-            print("XScroll:", totalYChange)
+            interactionManager.onScroll(
+                direction: .horizontal,
+                distance: totalXChange
+            )
+        }
+    }
+
+    private func onNone() {
+        // Clear the pinch timer.
+        pinchDurationTimer?.invalidate()
+        pinchDurationTimer = nil
+
+        // If the previous pose was a pinch, then detect if a "tap" was intended.
+        func checkPinchType() {
+            if pinchDuration >= HandTrackerDefaults.LongPinchDuration {
+                interactionManager.onLongTap(duration: pinchDuration)
+            } else {
+                interactionManager.onTap()
+            }
+
+            // Add another none pose so that the tap is not re-recoginized.
+            pastPoses.append(.none)
+        }
+
+        let poses = pastPoses.dropLast()
+        if case .pinch = poses.last {
+            let numberOfPoses = poses.count
+
+            // Need at least 3 poses in the history to detect intent [point, none, pinch] or possibly [point, pinch].
+            // A tap can only come from a point and then pinch.
+            if poses.count == 2,
+                poses[(numberOfPoses - 2)...(numberOfPoses - 1)] == [.point, .pinch]
+            {
+                checkPinchType()
+            } else if numberOfPoses >= 3,
+                poses[(numberOfPoses - 3)...(numberOfPoses - 1)] == [.point, .none, .pinch]
+                    || poses[(numberOfPoses - 2)...(numberOfPoses - 1)] == [.point, .pinch]
+            {
+                checkPinchType()
+            }
         }
     }
 
@@ -147,26 +175,46 @@ extension HandTrackerModel: HandTrackerDelegate {
         self.calibrationModel.receivedNewHand(data: value)
         self.handDataForCurrentPose.append(value)
 
-        switch currentHandPose {
-        case .flat:
-            checkForPan()
-        case .pinch:
-            checkForTap()
-        case .point:
-            moveCursor()
-        case .twoFinger:
-            checkForScroll()
-        case .none:
-            return
+        if case .confirmedPose(let handPose) = state {
+            switch handPose {
+            case .pinch:
+                onPinch()
+            case .point:
+                onPoint()
+            case .twoFinger:
+                checkForScroll()
+            case .none:
+                onNone()
+            }
         }
     }
 
     func handPoseDidChange(to value: HandPose) {
-        if calibrationModel.calibrationState == .Calibrated
-            && quality != .NotDetected
-            && currentHandPose != value
-        {
-            self.currentHandPose = value
+        guard calibrationModel.calibrationState == .Calibrated else {
+            state = .none
+            return
+        }
+
+        switch state {
+        case .none:
+            state = .possiblePose(handPose: value, amount: 1)
+        case .possiblePose(let pose, let amount):
+            if pose == value {
+                let updatedAmount = amount + 1
+                // If this pose has been seen more than the required ConfirmationAmount, we can confirm it as active.
+                // Or just track that we have seen it again.
+                if updatedAmount >= HandTrackerDefaults.ConfirmationAmount {
+                    state = .confirmedPose(handPose: value)
+                } else {
+                    state = .possiblePose(handPose: value, amount: updatedAmount)
+                }
+            } else {
+                state = .possiblePose(handPose: value, amount: 1)
+            }
+        case .confirmedPose(let pose):
+            if pose != value {
+                state = .possiblePose(handPose: value, amount: 1)
+            }
         }
     }
 
@@ -178,7 +226,7 @@ extension HandTrackerModel: HandTrackerDelegate {
         litte: VNConfidence
     ) {
         let highQuality: VNConfidence = 0.5
-        let lowQuality: VNConfidence = 0.3
+        let lowQuality: VNConfidence = UXDefaults.minimumCaptureQuality
 
         if thumb > highQuality,
             index > highQuality,
@@ -196,7 +244,7 @@ extension HandTrackerModel: HandTrackerDelegate {
             quality = .DetectedLowQuality
         } else {
             quality = .NotDetected
-            currentHandPose = .none
+            state = .none
         }
     }
 }

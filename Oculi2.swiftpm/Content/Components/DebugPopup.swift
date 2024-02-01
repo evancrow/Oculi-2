@@ -27,7 +27,7 @@ struct DebugPopup: View {
 
                     TextSection(
                         header: "Pose",
-                        text: handTrackerModel.currentHandPose.rawValue,
+                        text: handTrackerModel.state.label,
                         expandedSize: false
                     )
 

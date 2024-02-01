@@ -1,5 +1,5 @@
 //
-//  UXDefaults.swift
+//  LegacyUXDefaults.swift
 //  EyeTracker
 //
 //  Created by Evan Crow on 3/5/22.
@@ -7,7 +7,7 @@
 
 import CoreGraphics
 
-public struct UXDefaults {
+public struct LegacyUXDefaults {
     /// The minimum quality allowed by `VisionModel` to recognize the face as usable.
     /// The lower the number, the less strict and less acurate the data may be.
     internal static let minimumCaptureQuality: Float = 0.2
@@ -34,7 +34,7 @@ public struct UXDefaults {
 
     // MARK: - Cursor
     // Cursor
-    internal static let cursorHeight: CGFloat = 25
+    internal static let cursorHeight: CGFloat = 30
     /// How much to increase the speed of the cursor by.
     /// `Width` is how much to increase `x` by and `height` for `y`.
     public static var movmentMultiplier: CGSize = CGSize(width: 20, height: 23)

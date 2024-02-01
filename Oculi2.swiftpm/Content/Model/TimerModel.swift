@@ -15,13 +15,16 @@ class TimerModel: ObservableObject {
     var timer: Timer?
 
     func start() {
+        // Reset everything.
+        timer?.invalidate()
         timeRemaining = timerDuration
-        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] timer in
-            self?.timeRemaining -= 1
 
+        // Re-make the timer.
+        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] timer in
             if self?.timeRemaining ?? 0 <= 0 {
                 timer.invalidate()
-                self?.timer = nil
+            } else {
+                self?.timeRemaining -= 1
             }
         }
     }

@@ -36,8 +36,8 @@ struct BlinkTextFieldView: View {
                 .padding()
                 .background(
                     Color.blue
-                        .opacity(UXDefaults.backgroundOpacity)
-                        .cornerRadius(UXDefaults.backgroundCornerRadius)
+                        .opacity(LegacyUXDefaults.backgroundOpacity)
+                        .cornerRadius(LegacyUXDefaults.backgroundCornerRadius)
                 ).onBlink(name: placeholder, interactionManager: interactionManager) {
                     focusTextField = true
                 }.onQuickAction(

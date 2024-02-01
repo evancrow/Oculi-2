@@ -28,34 +28,6 @@ public class InteractionListener: Equatable {
     }
 }
 
-class BlinkListener: InteractionListener {
-    public let numberOfBlinks: Int
-
-    init(
-        id: String = "",
-        numberOfBlinks: Int,
-        boundingBox: CGRect,
-        action: @escaping () -> Void
-    ) {
-        self.numberOfBlinks = numberOfBlinks
-        super.init(id: id, boundingBox: boundingBox, action: action)
-    }
-}
-
-class LongBlinkListener: InteractionListener {
-    public let duration: Int
-
-    init(
-        id: String = "",
-        duration: Int,
-        boundingBox: CGRect,
-        action: @escaping () -> Void
-    ) {
-        self.duration = duration
-        super.init(id: id, boundingBox: boundingBox, action: action)
-    }
-}
-
 class HoverListener: InteractionListener {
     private let onHoverChanged: (Bool) -> Void
     public var isHovering = false {
@@ -73,26 +45,5 @@ class HoverListener: InteractionListener {
     ) {
         self.onHoverChanged = onHoverChanged
         super.init(id: id, boundingBox: boundingBox, action: {})
-    }
-}
-
-class QuickActionListener: InteractionListener {
-    public let priority: Double
-    public let conditionsMet: () -> Bool
-    /// If `true` the Quick Action can still be run if tracking is off.
-    public var overrideIsTracking: Bool
-
-    init(
-        id: String = "",
-        priority: Double,
-        overrideTracking: Bool = false,
-        conditionsMet: @escaping () -> Bool,
-        action: @escaping () -> Void
-    ) {
-        self.priority = priority
-        self.overrideIsTracking = overrideTracking
-        self.conditionsMet = conditionsMet
-
-        super.init(id: id, boundingBox: CGRect(), action: action)
     }
 }

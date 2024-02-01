@@ -16,15 +16,15 @@ struct BlinkButtonStyleConfig {
 
     static let basic = BlinkButtonStyleConfig(
         textColor: .blue,
-        backgroundColor: .blue.opacity(UXDefaults.backgroundOpacity),
-        cornerRadius: UXDefaults.backgroundCornerRadius,
+        backgroundColor: .blue.opacity(LegacyUXDefaults.backgroundOpacity),
+        cornerRadius: LegacyUXDefaults.backgroundCornerRadius,
         showInteractionDetails: true)
 
     /// A red alternative version to `basic`
     static let basicRedAlt = BlinkButtonStyleConfig(
         textColor: .red,
-        backgroundColor: .red.opacity(UXDefaults.backgroundOpacity),
-        cornerRadius: UXDefaults.backgroundCornerRadius.binade,
+        backgroundColor: .red.opacity(LegacyUXDefaults.backgroundOpacity),
+        cornerRadius: LegacyUXDefaults.backgroundCornerRadius.binade,
         showInteractionDetails: true)
 }
 
@@ -35,8 +35,8 @@ struct BlinkButtonStyle: ViewModifier {
 
     var opacityMultiplier: CGFloat {
         isEnabled
-            ? (hovering ? UXDefaults.hoverOpacityMultiplier : 1)
-            : UXDefaults.disabledOpacityMultiplier
+            ? (hovering ? LegacyUXDefaults.hoverOpacityMultiplier : 1)
+            : LegacyUXDefaults.disabledOpacityMultiplier
     }
 
     func body(content: Content) -> some View {

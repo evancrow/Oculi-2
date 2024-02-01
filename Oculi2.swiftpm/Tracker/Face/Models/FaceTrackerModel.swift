@@ -42,16 +42,8 @@ public class FaceTrackerModel: ObservableObject {
     private var blinkGroupTimer: Timer? = nil
     private var blinkDurationTimer: Timer? = nil
 
-    // Offset + Movement
-    @Published var offset: CGPoint = CGPoint(x: 0, y: 0) {
-        didSet {
-            // interactionManager.onCursorOffsetChanged(boundingBox: getCursorBoundingBox())
-        }
-    }
     /// Geometry from when tracking first began, used as a baseline.
     private var originGeometry: FaceGeometry? = nil
-    private var height: CGFloat = 0
-    private var width: CGFloat = 0
 
     private var leftEyePoints = [CGPoint]()
     private var rightEyePoints = [CGPoint]()
@@ -67,7 +59,7 @@ public class FaceTrackerModel: ObservableObject {
 
     public func resetOffset() {
         originGeometry = nil
-        offset = CGPoint(x: 0, y: 0)
+        interactionManager.resetCursorOffset()
     }
 
     public func startTracking() {
@@ -80,15 +72,14 @@ public class FaceTrackerModel: ObservableObject {
             isTracking = true
         }
 
-        UIApplication.shared.isIdleTimerDisabled = true
+        // UIApplication.shared.isIdleTimerDisabled = true
     }
 
     public func endTracking() {
         isTracking = false
-        interactionManager.onCursorOffsetChanged(
-            boundingBox: CGRect(x: 0, y: 0, width: 0, height: 0))
+        interactionManager.resetCursorOffset()
 
-        UIApplication.shared.isIdleTimerDisabled = false
+        // UIApplication.shared.isIdleTimerDisabled = false
     }
 
     // MARK: - Blinking
@@ -116,7 +107,7 @@ public class FaceTrackerModel: ObservableObject {
 
     private func checkIfEyeIsBlinking(points: [CGPoint]) -> Bool {
         let eyeHeight = getEyeHeight(points: points, useAbs: true)
-        let threshold = UXDefaults.isBlinkingMargin
+        let threshold = LegacyUXDefaults.isBlinkingMargin
 
         guard eyeHeight > 0 else {
             return false
@@ -149,7 +140,7 @@ public class FaceTrackerModel: ObservableObject {
             // User did not blink again in a close proximity to the last one.
             // Reset the group timer.
             blinkGroupTimer = Timer.scheduledTimer(
-                withTimeInterval: UXDefaults.maximumBlinkSeperationTime,
+                withTimeInterval: LegacyUXDefaults.maximumBlinkSeperationTime,
                 repeats: false,
                 block: { _ in
                     self.blinksEnded()
@@ -162,35 +153,18 @@ public class FaceTrackerModel: ObservableObject {
     private func longBlinkEnded() {
         let seconds = currentBlinkDuration + 1
 
-        if seconds == UXDefaults.toggleTrackingBlinkDuration {
+        if seconds == LegacyUXDefaults.toggleTrackingBlinkDuration {
             // Disable for now, as it could be confusing to the user.
             // toggleTrackingState()
         }
 
-        interactionManager.onLongBlink(onLongBlink: (seconds, getCursorBoundingBox()))
+        interactionManager.onLongBlink(duration: seconds)
     }
 
     // Called when the user stops blinking
     private func blinksEnded() {
         let numberOfBlinks = currentNumberOfBlinks + 1
         // interactionManager.onBlink(onBlink: (numberOfBlinks, getCursorBoundingBox()), isTracking: isTracking)
-    }
-
-    private func getCursorBoundingBox() -> CGRect {
-        let originX = width / 2
-        let originY = height / 2
-
-        let currentX = originX + offset.x
-        let currentY = originY + offset.y
-        let offsetForMin = UXDefaults.cursorHeight / 2
-
-        let boundingBox = CGRect(
-            x: currentX - offsetForMin,
-            y: currentY - offsetForMin,
-            width: UXDefaults.cursorHeight,
-            height: UXDefaults.cursorHeight)
-
-        return boundingBox
     }
 
     // Calibration
@@ -220,7 +194,7 @@ public class FaceTrackerModel: ObservableObject {
 
                     let bothEyeAverage = ((leftAverage + rightAverage) / 2)
 
-                    UXDefaults.isBlinkingMargin = bothEyeAverage + (bothEyeAverage * 0.2)
+                    LegacyUXDefaults.isBlinkingMargin = bothEyeAverage + (bothEyeAverage * 0.2)
 
                     blinkingHasBeenCalibrated = true
                     isCalibratingEyes = false
@@ -279,34 +253,10 @@ public class FaceTrackerModel: ObservableObject {
             }
         }()
 
-        let newXOffset = (xOffset * UXDefaults.movmentMultiplier.width)
-        let newYOffset = (yOffset * UXDefaults.movmentMultiplier.height)
+        let newXOffset = (xOffset * UXDefaults.movementMultiplier.width)
+        let newYOffset = (yOffset * UXDefaults.movementMultiplier.height)
 
-        if checkIfOffsetIsInBounds(CGPoint(x: newXOffset, y: newYOffset)) {
-            withAnimation(.linear) {
-                offset.x += newXOffset
-                offset.y += newYOffset
-            }
-        }
-    }
-
-    private func checkIfOffsetIsInBounds(_ newOffset: CGPoint) -> Bool {
-        let padding: CGFloat = 12
-
-        // Positions relative to the global frame
-        let expectedX = (width / 2) + offset.x + newOffset.x
-        let expectedY = (height / 2) + offset.y + newOffset.y
-
-        let withinX = expectedX < (width - padding) && expectedX > padding
-        let withinY = expectedY < (height - padding) && expectedY > padding
-
-        return withinX && withinY
-    }
-
-    // MARK: - config
-    public func updateViewValues(_ size: CGSize) {
-        self.height = size.height
-        self.width = size.width
+        interactionManager.moveCursorOffset(by: CGPoint(x: newXOffset, y: newYOffset))
     }
 
     init(interactionManager: InteractionManager) {

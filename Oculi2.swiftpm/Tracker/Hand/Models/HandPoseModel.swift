@@ -8,8 +8,6 @@
 import Foundation
 
 enum HandPose: String, CaseIterable {
-    /// Open hand: 􀉻.
-    case flat = "Flat"
     /// Thumb and index fingers pinched together.
     case pinch = "Pinch"
     /// One finger pointing: 􀤹.
@@ -21,8 +19,6 @@ enum HandPose: String, CaseIterable {
 
     var title: String {
         switch self {
-        case .flat:
-            "Flat Hand"
         case .pinch:
             "Pinch Your Fingers"
         case .point:
@@ -36,8 +32,6 @@ enum HandPose: String, CaseIterable {
 
     var setUpInstruction: String {
         switch self {
-        case .flat:
-            "Hold your dominant hand up, palm facing the camera. Keep your fingers together, like you’re saying stop."
         case .pinch:
             "Pinch both your dominant thumb and your index finger together."
         case .point:
@@ -51,8 +45,6 @@ enum HandPose: String, CaseIterable {
 
     var nextPose: HandPose? {
         switch self {
-        case .flat:
-            return .pinch
         case .pinch:
             return .point
         case .point:
@@ -64,89 +56,53 @@ enum HandPose: String, CaseIterable {
 }
 
 struct HandPoseMargins {
-    static private let Buffer: CGFloat = 0.055
-    static private(set) var FlatMargins: [CGFloat] = [0.23, 0.08, 0.09, 0.13]
-    static private(set) var PinchMargins: [CGFloat] = [0.05, 0.03]
-    static private(set) var PointMargins: [CGFloat] = [0.3, 0.3]
-    static private(set) var TwoPointMargins: [CGFloat] = [0.15, 0.08, 0.35, 0.04]
-
-    private static func updateFlatMargins(margins: [CGFloat]) {
-        FlatMargins = margins
-    }
-
-    private static func updatePinchMargins(margins: [CGFloat]) {
-        PinchMargins = margins
-    }
-
-    private static func updatePointMargins(margins: [CGFloat]) {
-        PointMargins = margins
-    }
-
-    private static func updateTwoPointMargins(margins: [CGFloat]) {
-        TwoPointMargins = margins
-    }
+    static private let Buffer: CGFloat = 0.075
+    static private(set) var FlatMargins: [CGFloat] = Array(repeating: 1, count: 5)
+    static private(set) var PinchMargins: [CGFloat] = Array(repeating: 1, count: 5)
+    static private(set) var PointMargins: [CGFloat] = Array(repeating: 1, count: 5)
+    static private(set) var TwoPointMargins: [CGFloat] = Array(repeating: 1, count: 5)
 
     public static func UpdateMargins(for pose: HandPose, margins: [CGFloat]) {
         switch pose {
-        case .flat:
-            updateFlatMargins(margins: margins.map { $0 + Buffer })
         case .pinch:
-            var margins = margins
-            margins[0] += Buffer
-            margins[1] -= Buffer
-
-            updatePinchMargins(margins: margins)
+            PinchMargins = margins
         case .point:
-            updatePointMargins(margins: margins.map { $0 - Buffer })
+            PointMargins = margins
         case .twoFinger:
-            var margins = margins
-            margins[0] -= Buffer
-            margins[1] += Buffer
-            margins[2] -= Buffer
-            margins[3] += Buffer
-
-            updateTwoPointMargins(margins: margins)
+            TwoPointMargins = margins
         case .none:
             return
         }
+    }
+
+    /// Checks if a value is within the margin calculated at calibration.
+    public static func Within(margin: CGFloat, value: CGFloat) -> Bool {
+        return ((margin - Buffer)...(margin + Buffer)).contains(value)
     }
 }
 
 class HandPoseModel {
     static func predictHandPose(from hand: Hand) -> HandPose {
-        func checkFlatHandPose(hand: Hand) -> Bool {
+        func tipPointsAllWithin(margins: [CGFloat]) -> Bool {
             return hand.tipDistances.enumerated().allSatisfy {
-                $1 < HandPoseMargins.FlatMargins[$0]
+                HandPoseMargins.Within(
+                    margin: margins[$0],
+                    value: $1
+                )
             }
         }
 
         func checkPinchPose(hand: Hand) -> Bool {
-            // Check if the thumb-index distance is within the specified pinch margin
-            // and if the index-middle distance is more than the second pinch margin.
-            return hand.tipDistances[0] < HandPoseMargins.PinchMargins[0]
-                && hand.tipDistances[1] > HandPoseMargins.PinchMargins[1]
+            tipPointsAllWithin(margins: HandPoseMargins.PinchMargins)
         }
 
         func checkPointPose(hand: Hand) -> Bool {
-            // Check if the first distance (thumb to index) is greater than the point margin.
-            // This assumes that in a point pose, the index finger is significantly extended.
-            // Do the same for the index to middle finger.
-            return hand.tipDistances[0] > HandPoseMargins.PointMargins[0]
-                && hand.tipDistances[1] > HandPoseMargins.PointMargins[1]
+            tipPointsAllWithin(margins: HandPoseMargins.PointMargins)
         }
 
         // Method for checking the 'twoFingerPoint' pose.
         func checkTwoFingerPointPose(hand: Hand) -> Bool {
-            // Check if the first two distances match the criteria for a two finger point.
-            // Assuming this pose is defined by the index and middle fingers being extended.
-            return hand.tipDistances[0] > HandPoseMargins.TwoPointMargins[0]
-                && hand.tipDistances[1] < HandPoseMargins.TwoPointMargins[1]
-                && hand.tipDistances[2] > HandPoseMargins.TwoPointMargins[2]
-                && hand.tipDistances[3] < HandPoseMargins.TwoPointMargins[3]
-        }
-
-        if checkFlatHandPose(hand: hand) {
-            return .flat
+            tipPointsAllWithin(margins: HandPoseMargins.TwoPointMargins)
         }
 
         if checkPinchPose(hand: hand) {

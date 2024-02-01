@@ -11,20 +11,16 @@ enum CalibrationStep {
     case permission
     case calibrationIntro
     case calibration(handPose: HandPose)
+    case somethingWentWrong
     case done
 }
 
 struct CalibrationPage: View {
+    @EnvironmentObject var trackerModel: TrackerModel
     @EnvironmentObject var navigationModel: NavigationModel
     @EnvironmentObject var handPoseCalibrationModel: HandPoseCalibrationModel
     @State private var needsToOpenSettings = false
-    @State private var step: CalibrationStep {
-        didSet {
-            if case .calibration(let handPose) = step {
-                handPoseCalibrationModel.startCalibration(for: handPose)
-            }
-        }
-    }
+    @State private var step: CalibrationStep
 
     var allPermissionsAccepted: Bool {
         PermissionModel.shared.nextRequiredPermission == nil
@@ -40,6 +36,8 @@ struct CalibrationPage: View {
             handPose.title
         case .done:
             "All Done"
+        case .somethingWentWrong:
+            "Hm 🤨"
         }
     }
 
@@ -53,6 +51,8 @@ struct CalibrationPage: View {
             handPose.setUpInstruction
         case .done:
             "Oculi is now ready to use."
+        case .somethingWentWrong:
+            "Oculi was not able to detect some of your poses. Please quickly try calibrating again!"
         }
     }
 
@@ -76,6 +76,7 @@ struct CalibrationPage: View {
                         } else {
                             PermissionModel.shared.requestAllRequiredPermissions { allAllowed in
                                 if allAllowed {
+                                    trackerModel.resetAVModel()
                                     step = .calibrationIntro
                                 } else {
                                     withAnimation(.interactiveSpring) {
@@ -116,12 +117,12 @@ struct CalibrationPage: View {
                 TextSection(header: "Now", text: "When ready, click start to began calibration")
 
                 Button {
-                    step = .calibration(handPose: .flat)
+                    handPoseCalibrationModel.startCalibration(for: .pinch)
                 } label: {
                     Text("Start")
                 }.buttonStyle(DefaultButtonStyle())
             }.multilineTextAlignment(.center)
-        case .calibration(let handPose):
+        case .calibration:
             VStack(spacing: PaddingSizes._52) {
                 Text("Hold for \(handPoseCalibrationModel.timeRemaining)")
                     .font(FontStyles.Title2.font)
@@ -132,21 +133,18 @@ struct CalibrationPage: View {
                 } label: {
                     Text("Skip")
                 }.buttonStyle(UnderlinedButtonStyle())
-            }.onChange(of: handPoseCalibrationModel.timeRemaining) { newValue in
-                if newValue <= 0 {
-                    if let nextPose = handPose.nextPose {
-                        step = .calibration(handPose: nextPose)
-                    } else {
-                        handPoseCalibrationModel.finishCalibration()
-                        step = .done
-                    }
-                }
             }
         case .done:
             Button {
                 navigationModel.moveToNextPage(popFirst: true)
             } label: {
                 Text("Continue")
+            }.buttonStyle(DefaultButtonStyle())
+        case .somethingWentWrong:
+            Button {
+                step = .calibrationIntro
+            } label: {
+                Text("Start Calibration")
             }.buttonStyle(DefaultButtonStyle())
         }
     }
@@ -163,6 +161,17 @@ struct CalibrationPage: View {
                 }
 
                 content
+            }
+        }.onChange(of: handPoseCalibrationModel.calibrationState) { value in
+            switch value {
+            case .CalibratingChangePose(let pose):
+                step = .calibration(handPose: pose)
+            case .Calibrated:
+                step = .done
+            case .Failed:
+                step = .somethingWentWrong
+            default:
+                return
             }
         }
     }
@@ -189,6 +198,8 @@ struct CalibrationPage: View {
         step: .permission
     ).environmentObject(
         NavigationModel()
+    ).environmentObject(
+        HandPoseCalibrationModel()
     )
 }
 
@@ -197,14 +208,18 @@ struct CalibrationPage: View {
         step: .calibrationIntro
     ).environmentObject(
         NavigationModel()
+    ).environmentObject(
+        HandPoseCalibrationModel()
     )
 }
 
 #Preview {
     CalibrationPage(
-        step: .calibration(handPose: .flat)
+        step: .calibration(handPose: .pinch)
     ).environmentObject(
         NavigationModel()
+    ).environmentObject(
+        HandPoseCalibrationModel()
     )
 }
 
@@ -213,5 +228,17 @@ struct CalibrationPage: View {
         step: .done
     ).environmentObject(
         NavigationModel()
+    ).environmentObject(
+        HandPoseCalibrationModel()
+    )
+}
+
+#Preview {
+    CalibrationPage(
+        step: .somethingWentWrong
+    ).environmentObject(
+        NavigationModel()
+    ).environmentObject(
+        HandPoseCalibrationModel()
     )
 }

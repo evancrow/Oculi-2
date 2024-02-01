@@ -25,7 +25,6 @@ class HandPoseCalibrationModel: ObservableObject {
         timerDuration: HandTrackerCalibrationDefaults.TotalTimePerPose
     )
     private var timerListener: AnyCancellable?
-    private var hand: Hand?
     private var calibrationData: [HandPose: [Hand]] = [:]
 
     // MARK: - State
@@ -33,13 +32,23 @@ class HandPoseCalibrationModel: ObservableObject {
         calibrationState = .CalibratingChangePose(pose: pose)
         timer.start()
         timerListener = timer.$timeRemaining.sink { [weak self] remaining in
-            self?.timeRemaining = remaining
+            DispatchQueue.main.async {
+                self?.timeRemaining = remaining
 
-            if case .CalibratingChangePose(pose) = self?.calibrationState,
-                remaining <= HandTrackerCalibrationDefaults.TotalTimePerPose
-                    - HandTrackerCalibrationDefaults.SetUpTime
-            {
-                self?.calibratePose(pose)
+                if case .CalibratingChangePose(pose) = self?.calibrationState,
+                    remaining <= HandTrackerCalibrationDefaults.TotalTimePerPose
+                        - HandTrackerCalibrationDefaults.SetUpTime
+                {
+                    self?.calibratePose(pose)
+                } else if case .CalibratingPose(pose) = self?.calibrationState,
+                    remaining <= 0
+                {
+                    if let nextPose = pose.nextPose {
+                        self?.startCalibration(for: nextPose)
+                    } else {
+                        self?.finishCalibration()
+                    }
+                }
             }
         }
     }
@@ -52,8 +61,9 @@ class HandPoseCalibrationModel: ObservableObject {
     func finishCalibration() {
         calibrationState = .Calibrated
 
-        for pose in HandPose.allCases {
-            let totalTipDistances = calibrationData[pose, default: []].reduce(
+        for pose in HandPose.allCases where pose != .none {
+            let dataForPose = calibrationData[pose, default: []]
+            let totalTipDistances = dataForPose.reduce(
                 into: Array(repeating: 0, count: 4)
             ) { partialResult, currentResult in
                 for index in 0..<4 {
@@ -61,7 +71,12 @@ class HandPoseCalibrationModel: ObservableObject {
                 }
             }
             let totalTipDistancesAverage: [CGFloat] = totalTipDistances.map {
-                $0 / CGFloat(calibrationData[pose, default: []].count)
+                $0 / CGFloat(dataForPose.count)
+            }
+
+            guard totalTipDistancesAverage.allSatisfy({ $0 > 0 }) else {
+                calibrationState = .Failed
+                return
             }
 
             HandPoseMargins.UpdateMargins(for: pose, margins: totalTipDistancesAverage)
@@ -74,8 +89,6 @@ class HandPoseCalibrationModel: ObservableObject {
 
     // MARK: - Data
     func receivedNewHand(data: Hand) {
-        self.hand = data
-
         if case .CalibratingPose(let pose) = calibrationState {
             calibrationData[pose, default: []].append(data)
         }
