@@ -14,20 +14,18 @@ public class InteractionManager: ObservableObject {
     private var viewHeight: CGFloat = 0
     private var showCursorTimer: Timer?
 
-    @Published private(set) var showCursor = false
+    @Published private(set) var showCursor = true
     @Published private(set) var cursorOffset: CGPoint = .zero {
         didSet {
             onCursorOffsetChanged()
             
-            if cursorOffset != .zero {
-                showCursor = true
-                showCursorTimer?.invalidate()
-                showCursorTimer = Timer.scheduledTimer(
-                    withTimeInterval: UXDefaults.cursorShowTime,
-                    repeats: false
-                ) { [weak self] _ in
-                    self?.showCursor = false
-                }
+            showCursor = true
+            showCursorTimer?.invalidate()
+            showCursorTimer = Timer.scheduledTimer(
+                withTimeInterval: UXDefaults.cursorShowTime,
+                repeats: false
+            ) { [weak self] _ in
+                self?.showCursor = false
             }
         }
     }

@@ -45,10 +45,20 @@ class HandTrackerModel: ObservableObject {
     private var pastHands: [Hand] = []
     private var pastPoses: [HandPose] = []
     // Pinch data.
+    private var pinching = false {
+        didSet {
+            if pinching != oldValue, !pinching {
+                pinchingStopped()
+            }
+        }
+    }
+    // Grouped pinches.
     private var pinchGroupTimer: Timer? = nil
     private var currentNumberOfPinches = 0
+    // Long pinches.
     private var pinchDurationTimer: Timer? = nil
     private var pinchDuration = 0
+    
 
     // MARK: - Interactions
     /// Maps to all the index tip points for the current pose.
@@ -99,44 +109,49 @@ class HandTrackerModel: ObservableObject {
     }
 
     private func onPinch() {
-        // If there is not already a timer tracking the pinch, add one.
-        if pinchDurationTimer == nil {
-            if let pinchGroupTimer = pinchGroupTimer, pinchGroupTimer.isValid {
-                currentNumberOfPinches += 1
-                pinchGroupTimer.invalidate()
-            }
-
-            pinchDuration = 0
-            pinchDurationTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
-                self.pinchDuration += 1
-            }
+        guard !pinching else {
+            return
+        }
+        
+        // Set pinching to true so duplicate notifications are not sent.
+        pinching = true
+        
+        // Start a timer to count how long the pinch is held.
+        pinchDuration = 0
+        pinchDurationTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+            self.pinchDuration += 1
+        }
+        
+        if let pinchGroupTimer = pinchGroupTimer, pinchGroupTimer.isValid {
+            currentNumberOfPinches += 1
+            pinchGroupTimer.invalidate()
+        } else {
+            currentNumberOfPinches = 1
         }
     }
-
-    private func onNone() {
-        // Clear the pinch timer.
+    
+    private func pinchingStopped() {
         pinchDurationTimer?.invalidate()
-        pinchDurationTimer = nil
-
+        
         pinchGroupTimer = Timer.scheduledTimer(
             withTimeInterval: HandTrackerDefaults.MaximumPinchSeperationTime,
             repeats: false,
-            block: { _ in
-                self.checkForTap()
-                self.pinchGroupTimer = nil
-                self.currentNumberOfPinches = 0
+            block: { [self] _ in
+                if pinchDuration >= HandTrackerDefaults.LongPinchDuration {
+                    interactionManager.onLongTap(duration: pinchDuration)
+                } else {
+                    interactionManager.onTap(numberOfTaps: currentNumberOfPinches)
+                }
+                
+                // Reset the long pinch timer.
+                pinchDuration = 0
+                pinchDurationTimer = nil
+               
+                // Reset the group of pinches.
+                currentNumberOfPinches = 0
+                pinchGroupTimer = nil
             }
         )
-
-        checkForTap()
-    }
-    
-    private func checkForTap() {
-        if pinchDuration >= HandTrackerDefaults.LongPinchDuration {
-            interactionManager.onLongTap(duration: pinchDuration)
-        } else {
-            interactionManager.onTap(numberOfTaps: currentNumberOfPinches)
-        }
     }
 
     @discardableResult
@@ -171,16 +186,17 @@ extension HandTrackerModel: HandTrackerDelegate {
         self.handDataForCurrentPose.append(value)
         self.calibrationModel.receivedNewHand(data: value)
         
+        var stillPinching = false
         switch state {
         case .confirmedPose(let handPose):
             switch handPose {
             case .pinch:
+                stillPinching = true
                 onPinch()
             case .twoFinger:
                 checkForScroll()
             case .none:
                 moveCursor()
-                onNone()
             }
         case .possiblePose(let handPose, _):
             switch handPose {
@@ -192,6 +208,8 @@ extension HandTrackerModel: HandTrackerDelegate {
         default:
             moveCursor()
         }
+        
+        pinching = stillPinching
     }
 
     func handPoseDidChange(to value: HandPose) {
@@ -230,21 +248,18 @@ extension HandTrackerModel: HandTrackerDelegate {
         ring: VNConfidence,
         litte: VNConfidence
     ) {
-        let highQuality: VNConfidence = 0.5
+        let highQuality: VNConfidence = 0.4
         let lowQuality: VNConfidence = UXDefaults.minimumCaptureQuality
 
         if thumb > highQuality,
-            index > highQuality,
-            middle > highQuality,
-            ring > highQuality,
-            litte > highQuality
+           index > highQuality,
+           middle > lowQuality
         {
             quality = .Detected
         } else if thumb > lowQuality,
             index > lowQuality,
             middle > lowQuality,
-            ring > lowQuality,
-            litte > lowQuality
+            ring > lowQuality
         {
             quality = .DetectedLowQuality
         } else {

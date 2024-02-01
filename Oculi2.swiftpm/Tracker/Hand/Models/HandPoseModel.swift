@@ -48,7 +48,7 @@ enum HandPose: String, CaseIterable {
 }
 
 struct HandPoseMargins {
-    static private let Buffer: CGFloat = 0.075
+    static private let Buffer: CGFloat = 0.055
     static private(set) var FlatMargins: [CGFloat] = Array(repeating: 1, count: 5)
     static private(set) var PinchMargins: [CGFloat] = Array(repeating: 1, count: 5)
     static private(set) var TwoPointMargins: [CGFloat] = Array(repeating: 1, count: 5)

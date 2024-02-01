@@ -17,18 +17,9 @@ struct Hand {
     func tipLocation(finger: Finger) -> CGPoint {
         return tips[finger]!
     }
-
-    // MARK: - Knuckles
-    let knuckles: [Finger: CGPoint]
-    let allKnuckles: [CGPoint]
-    let knuckleDistances: [CGFloat]
-
-    func knuckleLocation(finger: Finger) -> CGPoint {
-        return knuckles[finger]!
-    }
-
+    
     // MARK: - init
-    init(tips: [Finger: CGPoint], knuckles: [Finger: CGPoint]) {
+    init(tips: [Finger: CGPoint]) {
         func createDistances(joint: [Finger: CGPoint]) -> [CGFloat] {
             return [
                 joint[.thumb]!.calculateDistance(to: joint[.index]!),
@@ -42,10 +33,5 @@ struct Hand {
         self.tips = tips
         self.allTips = Array(tips.values)
         self.tipDistances = createDistances(joint: tips)
-
-        // Knuckles
-        self.knuckles = knuckles
-        self.allKnuckles = Array(knuckles.values)
-        self.knuckleDistances = createDistances(joint: knuckles)
     }
 }

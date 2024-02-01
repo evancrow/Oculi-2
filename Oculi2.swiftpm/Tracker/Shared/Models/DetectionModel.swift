@@ -54,12 +54,14 @@ class DetectionModel {
                     ]
                 )
             case .Hands(let delegate):
-                let detectFaceRectanglesRequest = VNDetectHumanHandPoseRequest {
+                let detectHandPoseRequest = VNDetectHumanHandPoseRequest {
                     [weak self] request, error in
                     self?.detectedHandPose(request, error, delegate)
                 }
+                detectHandPoseRequest.maximumHandCount = 1
+                detectHandPoseRequest.revision = VNDetectFaceCaptureQualityRequestRevision2
 
-                detectionRequests.append(detectFaceRectanglesRequest)
+                detectionRequests.append(detectHandPoseRequest)
             }
         }
 
@@ -161,10 +163,27 @@ class DetectionModel {
         _ error: Error?,
         _ delegate: HandTrackerDelegate
     ) {
+        func onFail(location: String) {
+            DispatchQueue.main.async {
+                delegate.handPoseDidChange(
+                    to: .none
+                )
+                delegate.handPoseConfidenceChanged(
+                    thumb: .nan,
+                    index: .nan,
+                    middle: .nan,
+                    ring: .nan,
+                    litte: .nan
+                )
+                
+                print("[Error] detectedHandPose failed at: \(location)")
+            }
+        }
+        
         guard let results = request.results as? [VNHumanHandPoseObservation],
             let result = results.first
         else {
-
+            onFail(location: "Request Results")
             return
         }
 
@@ -175,6 +194,7 @@ class DetectionModel {
             let ringFingerPoints = try? result.recognizedPoints(.ringFinger),
             let littleFingerPoints = try? result.recognizedPoints(.littleFinger)
         else {
+            onFail(location: "Find Points")
             return
         }
 
@@ -185,16 +205,7 @@ class DetectionModel {
             let ringTipPoint = ringFingerPoints[.ringTip],
             let littleTipPoint = littleFingerPoints[.littleTip]
         else {
-            return
-        }
-
-        // Look for knuckle points.
-        guard let thumbKnucklePoint = thumbPoints[.thumbIP],
-            let indexKnucklePoint = indexFingerPoints[.indexMCP],
-            let middleKnucklePoint = middleFingerPoints[.middleMCP],
-            let ringKnucklePoint = ringFingerPoints[.ringMCP],
-            let littleKnucklePoint = littleFingerPoints[.littleMCP]
-        else {
+            onFail(location: "Tip Points")
             return
         }
 
@@ -206,13 +217,6 @@ class DetectionModel {
                     .middle: middleTipPoint.location,
                     .ring: ringTipPoint.location,
                     .little: littleTipPoint.location,
-                ],
-                knuckles: [
-                    .thumb: thumbKnucklePoint.location,
-                    .index: indexKnucklePoint.location,
-                    .middle: middleKnucklePoint.location,
-                    .ring: ringKnucklePoint.location,
-                    .little: littleKnucklePoint.location,
                 ]
             )
 
