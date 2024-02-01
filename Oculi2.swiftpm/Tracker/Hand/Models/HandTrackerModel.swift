@@ -12,9 +12,13 @@ import Vision
 struct HandTrackerDefaults {
     /// Number of times a pose must be detected before it is confirmed to be active.
     static let ConfirmationAmount = 3
+
+    static let MaximumPinchSeperationTime: Double = 1
     /// Duration (in seconds) of how long a pinch must be before it is confirmed to be "long".
     /// Similar to a long tap.
     static let LongPinchDuration = 2
+
+    static let MinimumScrollDelta: CGFloat = 30
 }
 
 class HandTrackerModel: ObservableObject {
@@ -40,6 +44,8 @@ class HandTrackerModel: ObservableObject {
     private var handDataForCurrentPose: [Hand] = []
     private var pastPoses: [HandPose] = []
     // Pinch data.
+    private var pinchGroupTimer: Timer? = nil
+    private var currentNumberOfPinches = 0
     private var pinchDurationTimer: Timer? = nil
     private var pinchDuration = 0
 
@@ -95,34 +101,15 @@ class HandTrackerModel: ObservableObject {
     private func onPinch() {
         // If there is not already a timer tracking the pinch, add one.
         if pinchDurationTimer == nil {
+            if let pinchGroupTimer = pinchGroupTimer, pinchGroupTimer.isValid {
+                currentNumberOfPinches += 1
+                pinchGroupTimer.invalidate()
+            }
+
             pinchDuration = 0
             pinchDurationTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
                 self.pinchDuration += 1
             }
-        }
-    }
-
-    private func checkForZoom() {
-        // TODO: Watch for zoom.
-    }
-
-    private func checkForScroll() {
-        let (totalXChange, totalYChange, numberOfPoints) = getXYDelta()
-
-        guard numberOfPoints > 5 else {
-            return
-        }
-
-        if totalYChange >= totalXChange {
-            interactionManager.onScroll(
-                direction: .vertical,
-                distance: totalYChange
-            )
-        } else {
-            interactionManager.onScroll(
-                direction: .horizontal,
-                distance: totalXChange
-            )
         }
     }
 
@@ -131,12 +118,27 @@ class HandTrackerModel: ObservableObject {
         pinchDurationTimer?.invalidate()
         pinchDurationTimer = nil
 
+        pinchGroupTimer = Timer.scheduledTimer(
+            withTimeInterval: HandTrackerDefaults.MaximumPinchSeperationTime,
+            repeats: false,
+            block: { _ in
+                self.checkForTap()
+                self.pinchGroupTimer = nil
+                self.currentNumberOfPinches = 0
+            }
+        )
+
+        checkForTap()
+    }
+
+    @discardableResult
+    private func checkForTap() -> Bool {
         // If the previous pose was a pinch, then detect if a "tap" was intended.
         func checkPinchType() {
             if pinchDuration >= HandTrackerDefaults.LongPinchDuration {
                 interactionManager.onLongTap(duration: pinchDuration)
             } else {
-                interactionManager.onTap()
+                interactionManager.onTap(numberOfTaps: currentNumberOfPinches)
             }
 
             // Add another none pose so that the tap is not re-recoginized.
@@ -145,6 +147,9 @@ class HandTrackerModel: ObservableObject {
 
         let poses = pastPoses.dropLast()
         if case .pinch = poses.last {
+            return true
+            
+            /*
             let numberOfPoses = poses.count
 
             // Need at least 3 poses in the history to detect intent [point, none, pinch] or possibly [point, pinch].
@@ -158,8 +163,31 @@ class HandTrackerModel: ObservableObject {
                     || poses[(numberOfPoses - 2)...(numberOfPoses - 1)] == [.point, .pinch]
             {
                 checkPinchType()
+            } else {
+                return false
             }
+             */
         }
+
+        return false
+    }
+
+    @discardableResult
+    private func checkForScroll() -> Bool {
+        let (totalXChange, totalYChange, numberOfPoints) = getXYDelta()
+        let direction: Axis = totalYChange >= totalXChange ? .vertical : .horizontal
+        let delta = direction == .vertical ? totalYChange : totalXChange
+
+        guard numberOfPoints > 5, delta >= HandTrackerDefaults.MinimumScrollDelta else {
+            return false
+        }
+
+        interactionManager.onScroll(
+            direction: direction,
+            distance: delta
+        )
+
+        return true
     }
 
     // MARK: - init

@@ -9,11 +9,15 @@ import Foundation
 import SwiftUI
 
 class TapListener: InteractionListener {
+    public let numberOfTaps: Int
+
     override init(
         id: String = "",
+        numberOfTaps: Int = 1,
         boundingBox: CGRect,
         action: @escaping () -> Void
     ) {
+        self.numberOfTaps = numberOfTaps
         super.init(id: id, boundingBox: boundingBox, action: action)
     }
 }

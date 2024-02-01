@@ -146,7 +146,8 @@ public class FaceTrackerModel: ObservableObject {
                     self.blinksEnded()
                     self.blinkGroupTimer = nil
                     self.currentNumberOfBlinks = 0
-                })
+                }
+            )
         }
     }
 

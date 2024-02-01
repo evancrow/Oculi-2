@@ -181,14 +181,16 @@ extension InteractionManager {
     }
 
     // MARK: - Tap
-    public func onTap() {
-        // Filter listeners to those that match the number of blinks.
+    public func onTap(numberOfTaps: Int) {
+        // Filter listeners to those that match the number of taps.
+        let possibleListeners = tapListeners.filter { $0.numberOfTaps == numberOfTaps }
         runListenersWithMatchingBoundingBox(
             boundingBox: getCursorBoundingBox(),
-            possibleListeners: tapListeners
+            possibleListeners: possibleListeners
         )
 
         print(">>> TAP <<<")
+        print("Number of Taps:", numberOfTaps)
         print("Bounding Box:", getCursorBoundingBox())
     }
 
