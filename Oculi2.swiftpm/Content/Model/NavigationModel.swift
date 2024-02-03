@@ -14,8 +14,6 @@ enum Page {
     case Calibrate
     case Tutorial
     case Playground
-    case Developer
-    case EvanCrow
 
     @ViewBuilder
     var page: some View {
@@ -30,10 +28,6 @@ enum Page {
             TutorialPage()
         case .Playground:
             PlaygroundPage()
-        case .Developer:
-            DeveloperPage()
-        case .EvanCrow:
-            EvanCrowPage()
         }
     }
 
@@ -49,10 +43,6 @@ enum Page {
             return .Playground
         case .Playground:
             return nil
-        case .Developer:
-            return .Playground
-        case .EvanCrow:
-            return .Playground
         }
     }
 }
