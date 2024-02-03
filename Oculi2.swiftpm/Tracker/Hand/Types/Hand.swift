@@ -17,7 +17,7 @@ struct Hand {
     func tipLocation(finger: Finger) -> CGPoint {
         return tips[finger]!
     }
-    
+
     // MARK: - init
     init(tips: [Finger: CGPoint]) {
         func createDistances(joint: [Finger: CGPoint]) -> [CGFloat] {

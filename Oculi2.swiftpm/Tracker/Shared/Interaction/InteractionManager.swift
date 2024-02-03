@@ -18,7 +18,7 @@ public class InteractionManager: ObservableObject {
     @Published private(set) var cursorOffset: CGPoint = .zero {
         didSet {
             onCursorOffsetChanged()
-            
+
             showCursor = true
             showCursorTimer?.invalidate()
             showCursorTimer = Timer.scheduledTimer(
@@ -184,6 +184,9 @@ extension InteractionManager {
     private var longTapListeners: [LongTapListener] {
         interactionListeners.compactMap { $0 as? LongTapListener }
     }
+    private var dragListeners: [DragListener] {
+        interactionListeners.compactMap { $0 as? DragListener }
+    }
     private var scrollListeners: [ScrollListener] {
         interactionListeners.compactMap { $0 as? ScrollListener }
     }
@@ -214,6 +217,21 @@ extension InteractionManager {
 
         print(">>> LONG TAP <<<")
         print("Duration:", duration)
+        print("Bounding Box:", getCursorBoundingBox())
+    }
+
+    public func onDrag(delta: CGSize) {
+        let possibleListeners = dragListeners
+        possibleListeners.forEach {
+            $0.delta = delta
+        }
+        runListenersWithMatchingBoundingBox(
+            boundingBox: getCursorBoundingBox(),
+            possibleListeners: possibleListeners
+        )
+
+        print(">>> Drag <<<")
+        print("Delta:", delta)
         print("Bounding Box:", getCursorBoundingBox())
     }
 

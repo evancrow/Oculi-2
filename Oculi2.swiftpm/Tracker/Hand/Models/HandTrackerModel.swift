@@ -5,6 +5,7 @@
 //  Created by Evan Crow on 1/15/24.
 //
 
+import Combine
 import Foundation
 import SwiftUI
 import Vision
@@ -28,22 +29,18 @@ class HandTrackerModel: ObservableObject {
     @Published public private(set) var state: HandTrackerState = .none {
         didSet {
             handDataForCurrentPose = []
-
-            if case .confirmedPose(let handPose) = state {
-                pastPoses.append(handPose)
-            }
         }
     }
 
     // MARK: - Models
     private let interactionManager: InteractionManager
-    public let calibrationModel: HandPoseCalibrationModel = HandPoseCalibrationModel()
+    public let calibrationModel: HandPoseCalibrationModel
+    private var calibrationStateListener: AnyCancellable?
 
     // MARK: - Properties
     // Hand pose data.
     private var handDataForCurrentPose: [Hand] = []
     private var pastHands: [Hand] = []
-    private var pastPoses: [HandPose] = []
     // Pinch data.
     private var pinching = false {
         didSet {
@@ -58,7 +55,21 @@ class HandTrackerModel: ObservableObject {
     // Long pinches.
     private var pinchDurationTimer: Timer? = nil
     private var pinchDuration = 0
-    
+
+    /// Used to reset all data points.
+    /// Useful for when recalibrating or detection stopped.
+    func resetAll() {
+        currentHand = nil
+        handDataForCurrentPose = []
+        pastHands = []
+
+        pinching = false
+        pinchGroupTimer = nil
+        currentNumberOfPinches = 0
+
+        pinchDurationTimer = nil
+        pinchDuration = 0
+    }
 
     // MARK: - Interactions
     /// Maps to all the index tip points for the current pose.
@@ -100,28 +111,57 @@ class HandTrackerModel: ObservableObject {
         let xDifference = currentLocation.x - previousLocation.x
         let yDifference = currentLocation.y - previousLocation.y
 
-        interactionManager.moveCursorOffset(
-            by: .init(
-                x: xDifference * UXDefaults.movementMultiplier.width,
-                y: -yDifference * UXDefaults.movementMultiplier.height
+        func setCursorOffset() {
+            interactionManager.moveCursorOffset(
+                by: .init(
+                    x: xDifference * UXDefaults.movementMultiplier.width,
+                    y: -yDifference * UXDefaults.movementMultiplier.height
+                )
             )
-        )
+        }
+
+        func setCursorOffsetForDrag() {
+            interactionManager.onDrag(
+                delta: CGSize(width: xDifference, height: yDifference)
+            )
+        }
+
+        switch state {
+        case .none:
+            setCursorOffset()
+        case .possiblePose(let handPose, _):
+            switch handPose {
+            case .none:
+                setCursorOffset()
+            default:
+                return
+            }
+        case .confirmedPose(let handPose):
+            switch handPose {
+            case .pinch:
+                setCursorOffsetForDrag()
+            case .none:
+                setCursorOffset()
+            default:
+                return
+            }
+        }
     }
 
     private func onPinch() {
         guard !pinching else {
             return
         }
-        
+
         // Set pinching to true so duplicate notifications are not sent.
         pinching = true
-        
+
         // Start a timer to count how long the pinch is held.
         pinchDuration = 0
         pinchDurationTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
             self.pinchDuration += 1
         }
-        
+
         if let pinchGroupTimer = pinchGroupTimer, pinchGroupTimer.isValid {
             currentNumberOfPinches += 1
             pinchGroupTimer.invalidate()
@@ -129,10 +169,10 @@ class HandTrackerModel: ObservableObject {
             currentNumberOfPinches = 1
         }
     }
-    
+
     private func pinchingStopped() {
         pinchDurationTimer?.invalidate()
-        
+
         pinchGroupTimer = Timer.scheduledTimer(
             withTimeInterval: HandTrackerDefaults.MaximumPinchSeperationTime,
             repeats: false,
@@ -142,11 +182,11 @@ class HandTrackerModel: ObservableObject {
                 } else {
                     interactionManager.onTap(numberOfTaps: currentNumberOfPinches)
                 }
-                
+
                 // Reset the long pinch timer.
                 pinchDuration = 0
                 pinchDurationTimer = nil
-               
+
                 // Reset the group of pinches.
                 currentNumberOfPinches = 0
                 pinchGroupTimer = nil
@@ -175,6 +215,12 @@ class HandTrackerModel: ObservableObject {
     // MARK: - init
     init(interactionManager: InteractionManager) {
         self.interactionManager = interactionManager
+        self.calibrationModel = HandPoseCalibrationModel()
+        self.calibrationStateListener = self.calibrationModel.$calibrationState.sink { state in
+            if state == .NotCalibrated || state == .NotCalibrated {
+                self.resetAll()
+            }
+        }
     }
 }
 
@@ -185,31 +231,17 @@ extension HandTrackerModel: HandTrackerDelegate {
         self.pastHands.append(value)
         self.handDataForCurrentPose.append(value)
         self.calibrationModel.receivedNewHand(data: value)
-        
-        var stillPinching = false
+
         switch state {
         case .confirmedPose(let handPose):
-            switch handPose {
-            case .pinch:
-                stillPinching = true
-                onPinch()
-            case .twoFinger:
-                checkForScroll()
-            case .none:
-                moveCursor()
-            }
-        case .possiblePose(let handPose, _):
-            switch handPose {
-            case .none:
-                moveCursor()
-            default:
-                return
+            if handPose != .pinch {
+                pinchingStopped()
             }
         default:
-            moveCursor()
+            pinchingStopped()
         }
-        
-        pinching = stillPinching
+
+        moveCursor()
     }
 
     func handPoseDidChange(to value: HandPose) {
@@ -248,12 +280,12 @@ extension HandTrackerModel: HandTrackerDelegate {
         ring: VNConfidence,
         litte: VNConfidence
     ) {
-        let highQuality: VNConfidence = 0.4
+        let highQuality: VNConfidence = UXDefaults.highCaptureQuality
         let lowQuality: VNConfidence = UXDefaults.minimumCaptureQuality
 
         if thumb > highQuality,
-           index > highQuality,
-           middle > lowQuality
+            index > highQuality,
+            middle > lowQuality
         {
             quality = .Detected
         } else if thumb > lowQuality,
@@ -265,6 +297,7 @@ extension HandTrackerModel: HandTrackerDelegate {
         } else {
             quality = .NotDetected
             state = .none
+            resetAll()
         }
     }
 }

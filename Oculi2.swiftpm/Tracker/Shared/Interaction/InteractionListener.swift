@@ -15,7 +15,7 @@ public class InteractionListener: Equatable {
     public let boundingBox: CGRect
 
     /// The code that should be run if the conditions are met for the listener.
-    public let action: () -> Void
+    public var action: () -> Void
 
     init(id: String, boundingBox: CGRect, action: @escaping () -> Void) {
         self.id = id

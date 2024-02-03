@@ -32,10 +32,12 @@ struct BlinkButton<Label: View>: View {
         }
         .modifier(BlinkButtonStyle(config: config, hovering: isHovering, isEnabled: isEnabled))
         .onBlink(
-            name: name, interactionManager: interactionManager, numberOfBlinks: numberOfBlinks,
+            name: name,
+            interactionManager: interactionManager,
+            numberOfBlinks: numberOfBlinks,
             action: action
         )
-        .onEyeHover(name: name, interactionManager: interactionManager) { isHovering in
+        .onHover(name: name) { isHovering in
             self.isHovering = isHovering
         }
     }
@@ -79,7 +81,7 @@ struct LongBlinkButton<Label: View>: View {
         .onLongBlink(
             name: name, interactionManager: interactionManager, duration: duration, action: action
         )
-        .onEyeHover(name: name, interactionManager: interactionManager) { isHovering in
+        .onHover(name: name) { isHovering in
             self.isHovering = isHovering
         }
     }

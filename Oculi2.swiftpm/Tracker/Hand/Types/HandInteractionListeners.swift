@@ -36,6 +36,21 @@ class LongTapListener: InteractionListener {
     }
 }
 
+class DragListener: InteractionListener {
+    public var delta: CGSize = .zero
+
+    init(
+        id: String = "",
+        boundingBox: CGRect,
+        onDrag: @escaping (CGSize) -> Void
+    ) {
+        super.init(id: id, boundingBox: boundingBox, action: {})
+        self.action = {
+            onDrag(self.delta)
+        }
+    }
+}
+
 class ScrollListener: InteractionListener {
     public let direction: Axis
     public var distance: CGFloat = 0
@@ -43,10 +58,15 @@ class ScrollListener: InteractionListener {
     init(
         id: String = "",
         direction: Axis,
-        boundingBox: CGRect
+        boundingBox: CGRect,
+        onScroll: @escaping (CGFloat) -> Void
     ) {
         self.direction = direction
         super.init(id: id, boundingBox: boundingBox, action: {})
+
+        self.action = {
+            onScroll(self.distance)
+        }
     }
 }
 

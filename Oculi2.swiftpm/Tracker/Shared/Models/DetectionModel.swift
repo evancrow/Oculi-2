@@ -175,11 +175,11 @@ class DetectionModel {
                     ring: .nan,
                     litte: .nan
                 )
-                
+
                 print("[Error] detectedHandPose failed at: \(location)")
             }
         }
-        
+
         guard let results = request.results as? [VNHumanHandPoseObservation],
             let result = results.first
         else {

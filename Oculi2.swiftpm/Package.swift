@@ -43,9 +43,17 @@ let package = Package(
             appCategory: .utilities
         )
     ],
+    dependencies: [
+        .package(url: "https://github.com/siteline/swiftui-introspect.git", "1.1.2"..<"2.0.0")
+    ],
     targets: [
         .executableTarget(
             name: "AppModule",
+            dependencies: [
+                .product(name: "SwiftUIIntrospect", package: "swiftui-introspect"),
+                .product(name: "SwiftUIIntrospect-Dynamic", package: "swiftui-introspect"),
+                .product(name: "SwiftUIIntrospect-Static", package: "swiftui-introspect"),
+            ],
             path: ".",
             resources: [
                 .process("Resources")
