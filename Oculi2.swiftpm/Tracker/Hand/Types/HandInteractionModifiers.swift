@@ -231,3 +231,84 @@ extension View {
         )
     }
 }
+
+// MARK: - Zoom
+private struct ZoomViewModifier: ViewModifier {
+    @EnvironmentObject var interactionManager: InteractionManager
+    @State var listener: InteractionListener?
+    @State var zooming = true
+    @Binding var scale: Double
+
+    let name: String
+    let minZoomDepth: Int
+    var minScale: Double {
+        Double(truncating: pow(2, -minZoomDepth) as NSNumber)
+    }
+    let maxZoomDepth: Int
+    var maxScale: Double {
+        Double(truncating: pow(2, maxZoomDepth) as NSNumber)
+    }
+    
+    func body(content: Content) -> some View {
+        content
+            .onTap(
+                name: name,
+                numberOfTaps: 2
+            ) {
+                if zooming {
+                    // Check if less than max zoom
+                    // -> zoomIn
+                    // else
+                    // -> zoomOut
+                    if scale < maxScale {
+                       zoomIn()
+                    } else {
+                        zoomOut()
+                    }
+                } else {
+                    // Check if more than min zoom
+                    // -> zoomOut
+                    // else
+                    // -> zoomIn
+                    if scale > minScale {
+                        zoomOut()
+                    } else {
+                        zoomIn()
+                    }
+                }
+            }
+    }
+    
+    func zoomIn() {
+        zooming = true
+        scale = scale * 2
+    }
+    
+    func zoomOut() {
+        zooming = false
+        scale = scale / 2
+    }
+}
+
+extension View {
+    /// Zooms in and out when a double tap occurs.
+    /// - Parameters:
+    ///   - minZoomDepth: Number of time a user can zoom out from the starting state. For example, if I could zoom out twice, `minZoomDepth` would be 2.
+    ///   - maxZoomDepth: Number of time a user can zoom in from the starting state. For example, if I could zoom in twice, `maxZoomDepth` would be 2.
+    ///   - scale: The scale object should appear at. Recommended to start at 1.
+    func onZoom(
+        name: String,
+        minZoomDepth: Int,
+        maxZoomDepth: Int,
+        scale: Binding<Double>
+    ) -> some View {
+        return self.modifier(
+            ZoomViewModifier(
+                scale: scale, 
+                name: name, 
+                minZoomDepth: minZoomDepth,
+                maxZoomDepth: maxZoomDepth
+            )
+        )
+    }
+}
