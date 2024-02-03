@@ -7,20 +7,22 @@
 
 import SwiftUI
 
-enum PlaygroundStep {
-    case playground
-    case developers
-    case evanCrow
+enum PlaygroundOption: String, CaseIterable {
+    case calibrate = "Calibrate"
+    case tutorial = "Playground"
     
     var title: String {
-        switch self {
-        case .playground:
-            "Playground"
-        case .developers:
-            "How Developers Use Oculi"
-        case .evanCrow:
-            "Evan Crow"
-        }
+        self.rawValue
+    }
+}
+
+enum PlaygroundStep: String, CaseIterable {
+    case playground = "Playground"
+    case developers = "Developers"
+    case evanCrow = "Evan Crow"
+    
+    var title: String {
+        self.rawValue
     }
 
     var subtitle: String {
@@ -36,8 +38,10 @@ enum PlaygroundStep {
 }
 
 struct PlaygroundPage: View {
-    @EnvironmentObject var navigationModel: NavigationModel
+    @EnvironmentObject private var navigationModel: NavigationModel
     @State var step: PlaygroundStep = .playground
+    @State private var selectedStep: String
+    @State private var playgroundOption: String = PlaygroundOption.calibrate.rawValue
 
     var body: some View {
         PageContainer {
@@ -75,28 +79,15 @@ struct PlaygroundPage: View {
               
                 VStack(spacing: PaddingSizes._12) {
                     HStack(spacing: PaddingSizes._32) {
-                        SegmentedPicker(options: [
-                            .init(label: "Playground") {
-                                step = .playground
-                            },
-                            .init(label: "How Developers Use Oculi") {
-                                step = .developers
-                            },
-                            .init(label: "Evan Crow") {
-                                step = .evanCrow
-                            },
-                        ])
+                        SegmentedPicker(
+                            selectedOption: $selectedStep,
+                            options: PlaygroundStep.allCases.map { $0.rawValue }
+                        )
                         
                         SegmentedPicker(
-                            showSelected: false,
-                            options: [
-                                .init(label: "Calibrate") {
-                                    navigationModel.stack(page: .Calibrate)
-                                },
-                                .init(label: "Tutorial") {
-                                    navigationModel.stack(page: .Tutorial)
-                                },
-                            ]
+                            selectedOption: $playgroundOption,
+                            options: PlaygroundOption.allCases.map { $0.rawValue },
+                            showSelected: false
                         )
                     }.fixedSize()
                     
@@ -104,7 +95,34 @@ struct PlaygroundPage: View {
                         .font(FontStyles.Body2.font)
                 }
             }
+        }.onChange(of: selectedStep) { newValue in
+            switch PlaygroundStep(rawValue: newValue) {
+            case .some(let newStep):
+                self.step = newStep
+            case .none:
+                return
+            }
+        }.onChange(of: playgroundOption) { newValue in
+            switch PlaygroundOption(rawValue: newValue) {
+            case .calibrate:
+                navigationModel.stack(page: .Calibrate)
+            case .tutorial:
+                navigationModel.stack(page: .Tutorial)
+            case .none:
+                return
+            }
         }
+    }
+    
+    fileprivate init(step: PlaygroundStep) {
+        self._selectedStep = .init(initialValue: step.rawValue)
+        self.step = step
+    }
+    
+    init() {
+        let step: PlaygroundStep = .playground
+        self._selectedStep = .init(initialValue: step.rawValue)
+        self.step = step
     }
 }
 

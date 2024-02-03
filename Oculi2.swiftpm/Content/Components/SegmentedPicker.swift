@@ -18,18 +18,17 @@ struct SegmentedPickerOption: Identifiable, Equatable {
 }
 
 struct SegmentedPicker: View {
-    @State var selectedOption: SegmentedPickerOption
-    let showSelected: Bool
-    let options: [SegmentedPickerOption]
+    @Binding var selectedOption: String
+    let options: [String]
+    var showSelected: Bool = true
     
     var body: some View {
         HStack(spacing: 0) {
-            ForEach(options) { option in
+            ForEach(options, id: \.self) { option in
                 Button {
                     selectedOption = option
-                    option.onPick()
                 } label: {
-                    Text(option.label)
+                    Text(option)
                         .padding(.horizontal, PaddingSizes._32)
                         .padding(.vertical, PaddingSizes._12)
                         .frame(maxHeight: .infinity)
@@ -44,20 +43,15 @@ struct SegmentedPicker: View {
         )
         .fixedSize(horizontal: false, vertical: true)
     }
-    
-    init(showSelected: Bool = true, options: [SegmentedPickerOption]) {
-        self._selectedOption = .init(initialValue: options[0])
-        self.showSelected = showSelected
-        self.options = options
-    }
 }
 
 #Preview {
     SegmentedPicker(
+        selectedOption: .constant("One"),
         options: [
-            .init(label: "One", onPick: {}),
-            .init(label: "Two", onPick: {}),
-            .init(label: "Three", onPick: {}),
+            "One",
+            "Two",
+            "Three"
         ]
     )
 }
