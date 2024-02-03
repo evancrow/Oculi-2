@@ -79,7 +79,7 @@ struct TutorialPage: View {
     @State private var filledSquareBounds: CGRect? = nil
     @State private var emptySquareBounds: CGRect? = nil
     @State private var draggingCompleteTimer: Timer? = nil
-    
+
     // Zoom.
     @State private var scale: Double = 1
 
@@ -189,15 +189,14 @@ struct TutorialPage: View {
                         .resizable()
                         .scaledToFit()
                         .scaleEffect(scale)
-                    
+
                     Text("A cool photo I took of the Yosemite valley!")
                         .font(FontStyles.Body2.font)
                         .italic()
                 }
                 .clipShape(Rectangle())
                 .frame(maxWidth: 500)
-               
-                
+
                 VStack(spacing: PaddingSizes._12) {
                     Button {
                         navigationModel.moveToNextPage(popFirst: true)

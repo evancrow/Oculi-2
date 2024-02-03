@@ -11,7 +11,7 @@ struct SegmentedPickerOption: Identifiable, Equatable {
     let id = UUID()
     let label: String
     let onPick: () -> Void
-    
+
     static func == (lhs: SegmentedPickerOption, rhs: SegmentedPickerOption) -> Bool {
         lhs.id == rhs.id
     }
@@ -21,7 +21,7 @@ struct SegmentedPicker: View {
     @Binding var selectedOption: String
     let options: [String]
     var showSelected: Bool = true
-    
+
     var body: some View {
         HStack(spacing: 0) {
             ForEach(options, id: \.self) { option in
@@ -51,7 +51,7 @@ struct SegmentedPicker: View {
         options: [
             "One",
             "Two",
-            "Three"
+            "Three",
         ]
     )
 }

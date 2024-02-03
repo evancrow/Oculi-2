@@ -248,7 +248,7 @@ private struct ZoomViewModifier: ViewModifier {
     var maxScale: Double {
         Double(truncating: pow(2, maxZoomDepth) as NSNumber)
     }
-    
+
     func body(content: Content) -> some View {
         content
             .onTap(
@@ -261,7 +261,7 @@ private struct ZoomViewModifier: ViewModifier {
                     // else
                     // -> zoomOut
                     if scale < maxScale {
-                       zoomIn()
+                        zoomIn()
                     } else {
                         zoomOut()
                     }
@@ -278,12 +278,12 @@ private struct ZoomViewModifier: ViewModifier {
                 }
             }
     }
-    
+
     func zoomIn() {
         zooming = true
         scale = scale * 2
     }
-    
+
     func zoomOut() {
         zooming = false
         scale = scale / 2
@@ -304,8 +304,8 @@ extension View {
     ) -> some View {
         return self.modifier(
             ZoomViewModifier(
-                scale: scale, 
-                name: name, 
+                scale: scale,
+                name: name,
                 minZoomDepth: minZoomDepth,
                 maxZoomDepth: maxZoomDepth
             )

@@ -10,7 +10,7 @@ import SwiftUI
 enum PlaygroundOption: String, CaseIterable {
     case calibrate = "Calibrate"
     case tutorial = "Playground"
-    
+
     var title: String {
         self.rawValue
     }
@@ -20,7 +20,7 @@ enum PlaygroundStep: String, CaseIterable {
     case playground = "Playground"
     case developers = "Developers"
     case evanCrow = "Evan Crow"
-    
+
     var title: String {
         self.rawValue
     }
@@ -54,7 +54,7 @@ struct PlaygroundPage: View {
                         Text(step.subtitle)
                             .font(FontStyles.Body.font)
                     }
-                    
+
                     switch step {
                     case .playground:
                         TextSection(
@@ -76,21 +76,21 @@ struct PlaygroundPage: View {
                 }
 
                 Spacer()
-              
+
                 VStack(spacing: PaddingSizes._12) {
                     HStack(spacing: PaddingSizes._32) {
                         SegmentedPicker(
                             selectedOption: $selectedStep,
                             options: PlaygroundStep.allCases.map { $0.rawValue }
                         )
-                        
+
                         SegmentedPicker(
                             selectedOption: $playgroundOption,
                             options: PlaygroundOption.allCases.map { $0.rawValue },
                             showSelected: false
                         )
                     }.fixedSize()
-                    
+
                     Text("Tap or Swipe Between Pages")
                         .font(FontStyles.Body2.font)
                 }
@@ -113,12 +113,12 @@ struct PlaygroundPage: View {
             }
         }
     }
-    
+
     fileprivate init(step: PlaygroundStep) {
         self._selectedStep = .init(initialValue: step.rawValue)
         self.step = step
     }
-    
+
     init() {
         let step: PlaygroundStep = .playground
         self._selectedStep = .init(initialValue: step.rawValue)
