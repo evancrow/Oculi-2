@@ -22,4 +22,9 @@ class GeometryProxyValue: ObservableObject, Equatable {
     static func == (lhs: GeometryProxyValue, rhs: GeometryProxyValue) -> Bool {
         lhs.id == rhs.id
     }
+
+    init(geom: GeometryProxy? = nil) {
+        self.geom = geom
+        self.geomUpdated = 0
+    }
 }

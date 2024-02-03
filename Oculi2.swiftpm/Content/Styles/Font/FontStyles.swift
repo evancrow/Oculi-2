@@ -21,6 +21,8 @@ enum FontStyles: String, CaseIterable {
     case Body2
     case Body3
 
+    case Code
+
     // MARK: - Font
     private var name: String {
         switch self {
@@ -30,6 +32,8 @@ enum FontStyles: String, CaseIterable {
             AileronFont.SemiBold.rawValue
         case .Body, .Body2, .Body3:
             AileronFont.Regular.rawValue
+        case .Code:
+            ""
         }
     }
 
@@ -47,7 +51,7 @@ enum FontStyles: String, CaseIterable {
             18
         case .Header3:
             14
-        case .Body:
+        case .Body, .Code:
             14
         case .Body2:
             12
@@ -70,7 +74,7 @@ enum FontStyles: String, CaseIterable {
             return .title3
         case .Header3:
             return .body
-        case .Body:
+        case .Body, .Code:
             return .body
         case .Body2:
             return .caption
@@ -81,11 +85,17 @@ enum FontStyles: String, CaseIterable {
 
     var font: Font {
         UIFont.loadAllFonts()
-        return Font.custom(
-            self.name,
-            size: self.size,
-            relativeTo: self.relativeTo
-        )
+
+        switch self {
+        case .Code:
+            return Font.system(.body, design: .monospaced)
+        default:
+            return Font.custom(
+                self.name,
+                size: self.size,
+                relativeTo: self.relativeTo
+            )
+        }
     }
 }
 

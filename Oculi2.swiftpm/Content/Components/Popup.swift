@@ -21,7 +21,9 @@ struct Popup<Content: View>: View {
                 if !staticState {
                     Button(action: toggleExpandedState) {
                         Text("Close")
-                    }.buttonStyle(UnderlinedButtonStyle())
+                    }
+                    .buttonStyle(UnderlinedButtonStyle())
+                    .onLongTap(name: "Close", action: toggleExpandedState)
                 }
             } else {
                 Button(action: toggleExpandedState) {
@@ -29,6 +31,7 @@ struct Popup<Content: View>: View {
                         .resizable()
                         .frame(width: 18, height: 18)
                 }
+                .onLongTap(name: "Expand", action: toggleExpandedState)
             }
         }
         .padding(expanded ? PaddingSizes._32 : PaddingSizes._12)

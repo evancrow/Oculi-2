@@ -95,7 +95,8 @@ public struct InteractionViewWrapper<Content: View>: View {
          */
     }
 
-    public init(trackerModel: TrackerModel, content: () -> Content) {
+    public init(content: () -> Content) {
+        let trackerModel = TrackerModel(avModel: AVModel())
         self.model = trackerModel
         self.interactionManager = trackerModel.interactionManager
         self.calibrationModel = trackerModel.handTrackerModel.calibrationModel
