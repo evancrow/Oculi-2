@@ -91,13 +91,13 @@ public class InteractionManager: ObservableObject {
         }
 
         if checkIfOffsetIsInBounds(value) {
-            if switchToDragging {
-                onDrag(delta: CGSize(width: value.x, height: value.y))
-            } else {
-                withAnimation(.linear) {
-                    cursorOffset.x += value.x
-                    cursorOffset.y += value.y
+            withAnimation(.linear) {
+                if switchToDragging {
+                    onDrag(delta: CGSize(width: value.x, height: value.y))
                 }
+                
+                cursorOffset.x += value.x
+                cursorOffset.y += value.y
             }
 
         }
@@ -241,6 +241,10 @@ extension InteractionManager {
 
     // MARK: - Tap
     public func onTap(numberOfTaps: Int) {
+        guard !switchToDragging else {
+            return
+        }
+        
         // Filter listeners to those that match the number of taps.
         let possibleListeners = tapListeners.filter { $0.numberOfTaps == numberOfTaps }
         runListenersWithMatchingBoundingBox(
@@ -254,6 +258,10 @@ extension InteractionManager {
     }
 
     public func onLongTap(duration: Int) {
+        guard !switchToDragging else {
+            return
+        }
+        
         let possibleListeners = longTapListeners.filter { $0.duration == duration }
         runListenersWithMatchingBoundingBox(
             boundingBox: getCursorBoundingBox(),
@@ -266,6 +274,10 @@ extension InteractionManager {
     }
 
     public func onDrag(delta: CGSize) {
+        guard switchToDragging else {
+            return
+        }
+        
         let possibleListeners = dragListeners
         possibleListeners.forEach {
             $0.delta.width += delta.width
@@ -283,6 +295,10 @@ extension InteractionManager {
 
     // MARK: - Scroll
     public func onScroll(direction: Axis, distance: CGFloat) {
+        guard !switchToDragging else {
+            return
+        }
+        
         let possibleListeners = scrollListeners.filter { $0.direction == direction }
         possibleListeners.forEach {
             $0.distance = distance
@@ -300,6 +316,10 @@ extension InteractionManager {
 
     // MARK: - Zoom
     public func onZoom(scale: Double) {
+        guard !switchToDragging else {
+            return
+        }
+        
         let possibleListeners = zoomListeners
         possibleListeners.forEach {
             $0.scale = scale
