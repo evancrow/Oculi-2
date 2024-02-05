@@ -37,7 +37,7 @@ public class TrackerModel: ObservableObject {
 
         self.detectionModel = DetectionModel(
             detectionTypes: [
-                // .Face(delegate: faceTrackerModel),
+                .Face(delegate: faceTrackerModel),
                 .Hands(delegate: handTrackerModel)
             ]
         )

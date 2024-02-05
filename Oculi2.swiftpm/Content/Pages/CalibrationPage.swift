@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-enum CalibrationStep {
+enum CalibrationStep: Equatable {
     case permission
     case calibrationIntro
     case calibration(handPose: HandPose)
@@ -16,6 +16,7 @@ enum CalibrationStep {
 }
 
 struct CalibrationPage: View {
+    @EnvironmentObject var interactionManager: InteractionManager
     @EnvironmentObject var trackerModel: TrackerModel
     @EnvironmentObject var navigationModel: NavigationModel
     @EnvironmentObject var handPoseCalibrationModel: HandPoseCalibrationModel
@@ -177,6 +178,13 @@ struct CalibrationPage: View {
             default:
                 return
             }
+        }.onChange(of: step) { value in
+            switch value {
+            case .done:
+                interactionManager.enableTracking = true
+            default:
+                interactionManager.enableTracking = false
+            }
         }
     }
 
@@ -204,6 +212,8 @@ struct CalibrationPage: View {
         NavigationModel()
     ).environmentObject(
         HandPoseCalibrationModel()
+    ).environmentObject(
+        InteractionManager()
     )
 }
 
@@ -214,6 +224,8 @@ struct CalibrationPage: View {
         NavigationModel()
     ).environmentObject(
         HandPoseCalibrationModel()
+    ).environmentObject(
+        InteractionManager()
     )
 }
 
@@ -224,6 +236,8 @@ struct CalibrationPage: View {
         NavigationModel()
     ).environmentObject(
         HandPoseCalibrationModel()
+    ).environmentObject(
+        InteractionManager()
     )
 }
 
@@ -234,6 +248,8 @@ struct CalibrationPage: View {
         NavigationModel()
     ).environmentObject(
         HandPoseCalibrationModel()
+    ).environmentObject(
+        InteractionManager()
     )
 }
 
@@ -244,5 +260,7 @@ struct CalibrationPage: View {
         NavigationModel()
     ).environmentObject(
         HandPoseCalibrationModel()
+    ).environmentObject(
+        InteractionManager()
     )
 }

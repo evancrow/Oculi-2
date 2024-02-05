@@ -33,13 +33,7 @@ class DetectionModel {
                     self?.detectedFaceRectangles(request, error, delegate)
                 }
                 detectFaceRectanglesRequest.revision = VNDetectFaceRectanglesRequestRevision3
-
-                let detectFaceLandmarksRequest = VNDetectFaceLandmarksRequest {
-                    [weak self] request, error in
-                    self?.detectedFaceLandmarksRequest(request, error, delegate)
-                }
-                detectFaceLandmarksRequest.revision = VNDetectFaceRectanglesRequestRevision3
-
+                
                 let detectCaptureQualityRequest = VNDetectFaceCaptureQualityRequest {
                     [weak self] request, error in
                     self?.detectedFaceQualityRequest(request, error, delegate)
@@ -49,7 +43,6 @@ class DetectionModel {
                 detectionRequests.append(
                     contentsOf: [
                         detectFaceRectanglesRequest,
-                        detectFaceLandmarksRequest,
                         detectCaptureQualityRequest,
                     ]
                 )
@@ -117,24 +110,6 @@ class DetectionModel {
 
         DispatchQueue.main.async {
             delegate.faceGeometryDidChange(faceGeometry)
-        }
-    }
-
-    private func detectedFaceLandmarksRequest(
-        _ request: VNRequest,
-        _ error: Error?,
-        _ delegate: FaceTrackerDelegate
-    ) {
-        guard let results = request.results as? [VNFaceObservation],
-            let result = results.first,
-            let landmarks = result.landmarks
-        else {
-
-            return
-        }
-
-        DispatchQueue.main.async {
-            delegate.landmarksDidChange(landmarks)
         }
     }
 

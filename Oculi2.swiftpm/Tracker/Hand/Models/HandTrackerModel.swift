@@ -121,12 +121,15 @@ class HandTrackerModel: ObservableObject {
         let yDifference = currentLocation.y - previousLocation.y
 
         func setCursorOffset() {
+            // Temp. disable to try using head as a cursor.
+            /*
             interactionManager.moveCursorOffset(
                 by: .init(
                     x: xDifference * HandTrackerDefaults.MovementMultiplier.width,
                     y: -yDifference * HandTrackerDefaults.MovementMultiplier.height
                 )
             )
+             */
         }
 
         func setCursorOffsetForDrag() {

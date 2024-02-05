@@ -10,7 +10,6 @@ import SwiftUI
 import Vision
 
 protocol FaceTrackerDelegate {
-    func landmarksDidChange(_ landmarks: VNFaceLandmarks2D)
     func faceGeometryDidChange(_ geometry: FaceGeometry)
     func faceCaptureQualityDidChange(_ quality: VisionQualityState)
 }

@@ -29,6 +29,7 @@ public class InteractionManager: ObservableObject {
             }
         }
     }
+    public var enableTracking = false
 
     private func checkIfOffsetIsInBounds(_ newOffset: CGPoint) -> Bool {
         let padding: CGFloat = PaddingSizes._52
@@ -61,12 +62,20 @@ public class InteractionManager: ObservableObject {
     }
 
     public func setCursorOffset(to point: CGPoint) {
+        guard enableTracking else {
+            return
+        }
+        
         if checkIfOffsetIsInBounds(point) {
             cursorOffset = point
         }
     }
 
     public func moveCursorOffset(by value: CGPoint) {
+        guard enableTracking else {
+            return
+        }
+        
         if checkIfOffsetIsInBounds(value) {
             withAnimation(.linear) {
                 cursorOffset.x += value.x
@@ -107,6 +116,9 @@ public class InteractionManager: ObservableObject {
         boundingBox: CGRect,
         possibleListeners: [InteractionListener]
     ) {
+        guard enableTracking else {
+            return
+        }
         print("POSSIBLE LISTENERS:", possibleListeners.map(\.boundingBox))
         
         // Run the action for each listener if the cursor is inside the listener's view.

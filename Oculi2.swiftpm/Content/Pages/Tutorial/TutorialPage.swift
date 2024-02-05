@@ -33,11 +33,11 @@ enum TutorialStep: String {
     var subtitle: String {
         switch self {
         case .cursor:
-            return "To navigate, point and move your index finger like a cursor."
+            return "To navigate, move your head up/down & left/right  like a cursor."
         case .tapping:
             return "Hover over an object, then pinch to tap."
         case .scrolling:
-            return "Use two fingers to scroll up and down."
+            return "Hover over an object, then use two fingers to scroll up and down."
         case .dragging:
             return "Pinch and move your fingers to drag objects."
         case .zooming:
