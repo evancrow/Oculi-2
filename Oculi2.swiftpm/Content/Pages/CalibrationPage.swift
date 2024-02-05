@@ -139,7 +139,11 @@ struct CalibrationPage: View {
                 navigationModel.moveToNextPage(popFirst: true)
             } label: {
                 Text("Continue")
-            }.buttonStyle(DefaultButtonStyle())
+            }
+            .buttonStyle(DefaultButtonStyle())
+            .onTap(name: "continue") {
+                navigationModel.moveToNextPage(popFirst: true)
+            }
         case .somethingWentWrong:
             Button {
                 step = .calibrationIntro

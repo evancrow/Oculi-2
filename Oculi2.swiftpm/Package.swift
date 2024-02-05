@@ -8,7 +8,7 @@ import PackageDescription
 import AppleProductTypes
 
 let package = Package(
-    name: "Oculi 2",
+    name: "Oculi2",
     platforms: [
         .iOS("16")
     ],
@@ -41,15 +41,13 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(url: "https://github.com/siteline/swiftui-introspect.git", "1.1.2"..<"2.0.0")
+        .package(url: "git@github.com:siteline/swiftui-introspect.git", "1.1.2"..<"2.0.0")
     ],
     targets: [
         .executableTarget(
             name: "AppModule",
             dependencies: [
-                .product(name: "SwiftUIIntrospect", package: "swiftui-introspect"),
-                .product(name: "SwiftUIIntrospect-Dynamic", package: "swiftui-introspect"),
-                .product(name: "SwiftUIIntrospect-Static", package: "swiftui-introspect")
+                .product(name: "SwiftUIIntrospect", package: "swiftui-introspect")
             ],
             path: ".",
             resources: [

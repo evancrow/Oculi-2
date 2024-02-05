@@ -44,7 +44,7 @@ public class InteractionManager: ObservableObject {
         return withinX && withinY
     }
 
-    private func getCursorBoundingBox() -> CGRect {
+    public func getCursorBoundingBox() -> CGRect {
         let origin = getOrigin()
         let currentX = origin.x + cursorOffset.x
         let currentY = origin.y + cursorOffset.y
@@ -107,6 +107,8 @@ public class InteractionManager: ObservableObject {
         boundingBox: CGRect,
         possibleListeners: [InteractionListener]
     ) {
+        print("POSSIBLE LISTENERS:", possibleListeners.map(\.boundingBox))
+        
         // Run the action for each listener if the cursor is inside the listener's view.
         for listener in possibleListeners where listener.boundingBox.contains(boundingBox.origin) {
             listener.action()
@@ -195,11 +197,11 @@ extension InteractionManager {
     }
 
     // MARK: - Tap
-    public func onTap(numberOfTaps: Int) {
+    public func onTap(numberOfTaps: Int, boundingBox: CGRect?) {
         // Filter listeners to those that match the number of taps.
         let possibleListeners = tapListeners.filter { $0.numberOfTaps == numberOfTaps }
         runListenersWithMatchingBoundingBox(
-            boundingBox: getCursorBoundingBox(),
+            boundingBox: boundingBox ?? getCursorBoundingBox(),
             possibleListeners: possibleListeners
         )
 
@@ -208,10 +210,10 @@ extension InteractionManager {
         print("Bounding Box:", getCursorBoundingBox())
     }
 
-    public func onLongTap(duration: Int) {
+    public func onLongTap(duration: Int, boundingBox: CGRect?) {
         let possibleListeners = longTapListeners.filter { $0.duration == duration }
         runListenersWithMatchingBoundingBox(
-            boundingBox: getCursorBoundingBox(),
+            boundingBox: boundingBox ?? getCursorBoundingBox(),
             possibleListeners: possibleListeners
         )
 
@@ -253,13 +255,13 @@ extension InteractionManager {
     }
 
     // MARK: - Zoom
-    public func onZoom(scale: Double) {
+    public func onZoom(scale: Double, boundingBox: CGRect?) {
         let possibleListeners = zoomListeners
         possibleListeners.forEach {
             $0.scale = scale
         }
         runListenersWithMatchingBoundingBox(
-            boundingBox: getCursorBoundingBox(),
+            boundingBox: boundingBox ?? getCursorBoundingBox(),
             possibleListeners: possibleListeners
         )
 

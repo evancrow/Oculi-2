@@ -59,7 +59,7 @@ class DetectionModel {
                     self?.detectedHandPose(request, error, delegate)
                 }
                 detectHandPoseRequest.maximumHandCount = 1
-                detectHandPoseRequest.revision = VNDetectFaceCaptureQualityRequestRevision2
+                detectHandPoseRequest.revision = VNDetectHumanHandPoseRequestRevision1
 
                 detectionRequests.append(detectHandPoseRequest)
             }
@@ -183,7 +183,7 @@ class DetectionModel {
         guard let results = request.results as? [VNHumanHandPoseObservation],
             let result = results.first
         else {
-            onFail(location: "Request Results")
+            // onFail(location: "Request Results")
             return
         }
 
