@@ -10,6 +10,7 @@ import SwiftUI
 struct DebugPopup: View {
     @State var expanded = false
     @EnvironmentObject var navigationModel: NavigationModel
+    @EnvironmentObject var faceTrackerModel: FaceTrackerModel
     @EnvironmentObject var handTrackerModel: HandTrackerModel
 
     var body: some View {

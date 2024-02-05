@@ -60,7 +60,7 @@ struct PlaygroundPage: View {
                             Text(step.subtitle)
                                 .font(FontStyles.Body.font)
                                 .multilineTextAlignment(.center)
-                        }.frame(maxWidth: 600)
+                        }.frame(maxWidth: UXDefaults.maximumPageWidth)
 
                         Group {
                             switch step {

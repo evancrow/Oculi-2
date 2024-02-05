@@ -9,7 +9,6 @@ import SwiftUI
 
 public struct InteractionViewWrapper<Content: View>: View {
     @ObservedObject var model: TrackerModel
-    @ObservedObject var calibrationModel: HandPoseCalibrationModel
     @ObservedObject var interactionManager: InteractionManager
     @ObservedObject var permissionModel = PermissionModel.shared
     @ObservedObject var speechRecognizerModel = SpeechRecognizerModel()
@@ -56,22 +55,21 @@ public struct InteractionViewWrapper<Content: View>: View {
                     Spacer()
                 }
 
-                if interactionManager.showCursor && calibrationModel.calibrationState == .Calibrated
-                {
+                if interactionManager.showCursor &&  model.calibrated {
                     Cursor(offset: interactionManager.cursorOffset)
                 }
             }
             .environmentObject(geometryProxyValue)
-            .environmentObject(model)
             .environmentObject(interactionManager)
-            .environmentObject(model.handTrackerModel)
-            .environmentObject(calibrationModel)
-            .environmentObject(model.faceTrackerModel)
-            .environmentObject(model.avModel)
             .environmentObject(speechRecognizerModel)
+            .environmentObject(model)
+            .environmentObject(model.avModel)
+            .environmentObject(model.faceTrackerModel)
+            .environmentObject(model.handTrackerModel)
+            .environmentObject(model.handTrackerModel.calibrationModel)
             .padding(.bottom)
             .useEffect(deps: geom.size) { _ in
-                model.interactionManager.updateViewValues(geom.size)
+                interactionManager.updateViewValues(geom.size)
                 geometryProxyValue.geom = geom
             }.useEffect(deps: geom.safeAreaInsets.bottom) { bottomSafeArea in
                 keyboardVisible = bottomSafeArea > 100
@@ -99,7 +97,6 @@ public struct InteractionViewWrapper<Content: View>: View {
         let trackerModel = TrackerModel(avModel: AVModel())
         self.model = trackerModel
         self.interactionManager = trackerModel.interactionManager
-        self.calibrationModel = trackerModel.handTrackerModel.calibrationModel
         self.content = content()
     }
 }

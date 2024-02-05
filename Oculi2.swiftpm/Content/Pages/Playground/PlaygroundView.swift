@@ -64,7 +64,7 @@ struct PlaygroundView: View {
                 }
             }
             .font(FontStyles.Body.font)
-            .frame(maxWidth: 600)
+            .frame(maxWidth: UXDefaults.maximumPageWidth)
 
             Spacer()
         }

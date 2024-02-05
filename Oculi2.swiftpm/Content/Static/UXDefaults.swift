@@ -16,4 +16,6 @@ public struct UXDefaults {
     // MARK: - Cursor
     internal static let cursorShowTime: Double = 2
     internal static let cursorHeight: CGFloat = 30
+    
+    static let maximumPageWidth: CGFloat = 600
 }

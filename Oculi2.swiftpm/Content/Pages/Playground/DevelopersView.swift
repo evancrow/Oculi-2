@@ -48,7 +48,7 @@ struct DevelopersView: View {
                     + Text("onDrag").font(FontStyles.Code.font) + Text(", and ")
                     + Text("onZoom").font(FontStyles.Code.font) + Text(".")
             }.font(FontStyles.Body.font)
-        }.frame(maxWidth: 600)
+        }.frame(maxWidth: UXDefaults.maximumPageWidth)
     }
 }
 

@@ -13,12 +13,17 @@ public class InteractionManager: ObservableObject {
     private var viewWidth: CGFloat = 0
     private var viewHeight: CGFloat = 0
     private var showCursorTimer: Timer?
-
-    @Published private(set) var showCursor = true
+   
+    var interactionEnabled = false
+    @Published var showCursor = true
     @Published private(set) var cursorOffset: CGPoint = .zero {
         didSet {
+            if !interactionEnabled {
+                showCursor = false
+                return
+            }
+            
             onCursorOffsetChanged()
-
             showCursor = true
             showCursorTimer?.invalidate()
             showCursorTimer = Timer.scheduledTimer(
@@ -29,7 +34,6 @@ public class InteractionManager: ObservableObject {
             }
         }
     }
-    public var enableTracking = false
 
     private func checkIfOffsetIsInBounds(_ newOffset: CGPoint) -> Bool {
         let padding: CGFloat = PaddingSizes._52
@@ -62,7 +66,7 @@ public class InteractionManager: ObservableObject {
     }
 
     public func setCursorOffset(to point: CGPoint) {
-        guard enableTracking else {
+        guard interactionEnabled else {
             return
         }
         
@@ -72,7 +76,7 @@ public class InteractionManager: ObservableObject {
     }
 
     public func moveCursorOffset(by value: CGPoint) {
-        guard enableTracking else {
+        guard interactionEnabled else {
             return
         }
         
@@ -116,7 +120,7 @@ public class InteractionManager: ObservableObject {
         boundingBox: CGRect,
         possibleListeners: [InteractionListener]
     ) {
-        guard enableTracking else {
+        guard interactionEnabled else {
             return
         }
         print("POSSIBLE LISTENERS:", possibleListeners.map(\.boundingBox))

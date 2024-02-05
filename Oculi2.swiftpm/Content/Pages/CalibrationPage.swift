@@ -11,12 +11,12 @@ enum CalibrationStep: Equatable {
     case permission
     case calibrationIntro
     case calibration(handPose: HandPose)
+    case headCalibration
     case somethingWentWrong
     case done
 }
 
 struct CalibrationPage: View {
-    @EnvironmentObject var interactionManager: InteractionManager
     @EnvironmentObject var trackerModel: TrackerModel
     @EnvironmentObject var navigationModel: NavigationModel
     @EnvironmentObject var handPoseCalibrationModel: HandPoseCalibrationModel
@@ -35,6 +35,8 @@ struct CalibrationPage: View {
             "Calibration"
         case .calibration(let handPose):
             handPose.title
+        case .headCalibration:
+            "Head Calibration"
         case .done:
             "All Done"
         case .somethingWentWrong:
@@ -50,6 +52,8 @@ struct CalibrationPage: View {
             "Everyone is different! Calibration makes sure your hand movements are properly recognized."
         case .calibration(let handPose):
             handPose.setUpInstruction
+        case .headCalibration:
+            "Oculi tracks your head movments to navigate. Hold your head in a natural, comfortable position, then click continue."
         case .done:
             "Oculi is now ready to use."
         case .somethingWentWrong:
@@ -124,32 +128,33 @@ struct CalibrationPage: View {
                 }.buttonStyle(DefaultButtonStyle())
             }.multilineTextAlignment(.center)
         case .calibration:
-            VStack(spacing: PaddingSizes._52) {
-                Text("Hold for \(handPoseCalibrationModel.timeRemaining)")
-                    .font(FontStyles.Title2.font)
-
-                Button {
-                    handPoseCalibrationModel.skipCalibration()
+            Text("Hold for \(handPoseCalibrationModel.timeRemaining)")
+                .font(FontStyles.Title2.font)
+        case .headCalibration:
+            Button {
+                if trackerModel.enableTracking() {
                     step = .done
-                } label: {
-                    Text("Skip")
-                }.buttonStyle(UnderlinedButtonStyle())
-            }
+                } else {
+                    step = .somethingWentWrong
+                }
+            } label: {
+                Text("Continue")
+            }.buttonStyle(DefaultButtonStyle())
         case .done:
             Button {
                 navigationModel.moveToNextPage(popFirst: true)
             } label: {
-                Text("Continue")
+                Text("Complete Calibration")
             }
             .buttonStyle(DefaultButtonStyle())
-            .onTap(name: "continue") {
+            .onTap(name: "complete") {
                 navigationModel.moveToNextPage(popFirst: true)
             }
         case .somethingWentWrong:
             Button {
                 step = .calibrationIntro
             } label: {
-                Text("Start Calibration")
+                Text("Restart Calibration")
             }.buttonStyle(DefaultButtonStyle())
         }
     }
@@ -163,6 +168,8 @@ struct CalibrationPage: View {
 
                     Text(subtitle)
                         .font(FontStyles.Body.font)
+                        .frame(maxWidth: UXDefaults.maximumPageWidth)
+                        .multilineTextAlignment(.center)
                 }
 
                 content
@@ -172,19 +179,14 @@ struct CalibrationPage: View {
             case .CalibratingChangePose(let pose):
                 step = .calibration(handPose: pose)
             case .Calibrated:
-                step = .done
+                step = .headCalibration
             case .Failed:
                 step = .somethingWentWrong
             default:
                 return
             }
-        }.onChange(of: step) { value in
-            switch value {
-            case .done:
-                interactionManager.enableTracking = true
-            default:
-                interactionManager.enableTracking = false
-            }
+        }.onAppear {
+            trackerModel.disableTracking()
         }
     }
 
@@ -195,6 +197,7 @@ struct CalibrationPage: View {
     ) {
         self._step = State(initialValue: step)
         self._needsToOpenSettings = State(initialValue: needsToOpenSettings)
+        
     }
 
     init() {
@@ -213,7 +216,7 @@ struct CalibrationPage: View {
     ).environmentObject(
         HandPoseCalibrationModel()
     ).environmentObject(
-        InteractionManager()
+        TrackerModel(avModel: AVModel())
     )
 }
 
@@ -225,7 +228,7 @@ struct CalibrationPage: View {
     ).environmentObject(
         HandPoseCalibrationModel()
     ).environmentObject(
-        InteractionManager()
+        TrackerModel(avModel: AVModel())
     )
 }
 
@@ -237,7 +240,19 @@ struct CalibrationPage: View {
     ).environmentObject(
         HandPoseCalibrationModel()
     ).environmentObject(
-        InteractionManager()
+        TrackerModel(avModel: AVModel())
+    )
+}
+
+#Preview {
+    CalibrationPage(
+        step: .headCalibration
+    ).environmentObject(
+        NavigationModel()
+    ).environmentObject(
+        HandPoseCalibrationModel()
+    ).environmentObject(
+        TrackerModel(avModel: AVModel())
     )
 }
 
@@ -249,7 +264,7 @@ struct CalibrationPage: View {
     ).environmentObject(
         HandPoseCalibrationModel()
     ).environmentObject(
-        InteractionManager()
+        TrackerModel(avModel: AVModel())
     )
 }
 
@@ -261,6 +276,6 @@ struct CalibrationPage: View {
     ).environmentObject(
         HandPoseCalibrationModel()
     ).environmentObject(
-        InteractionManager()
+        TrackerModel(avModel: AVModel())
     )
 }

@@ -113,7 +113,7 @@ struct TutorialPage: View {
                 } label: {
                     Text("Skip")
                 }.buttonStyle(UnderlinedButtonStyle())
-            }
+            }.padding(PaddingSizes._52)
         }
     }
 }
