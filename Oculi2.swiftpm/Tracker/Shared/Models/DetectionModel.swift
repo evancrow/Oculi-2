@@ -33,7 +33,7 @@ class DetectionModel {
                     self?.detectedFaceRectangles(request, error, delegate)
                 }
                 detectFaceRectanglesRequest.revision = VNDetectFaceRectanglesRequestRevision3
-                
+
                 let detectCaptureQualityRequest = VNDetectFaceCaptureQualityRequest {
                     [weak self] request, error in
                     self?.detectedFaceQualityRequest(request, error, delegate)
@@ -52,8 +52,6 @@ class DetectionModel {
                     self?.detectedHandPose(request, error, delegate)
                 }
                 detectHandPoseRequest.maximumHandCount = 1
-                detectHandPoseRequest.revision = VNDetectHumanHandPoseRequestRevision1
-
                 detectionRequests.append(detectHandPoseRequest)
             }
         }

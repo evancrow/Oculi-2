@@ -24,7 +24,7 @@ private struct TapViewModifier: ViewModifier {
                 ViewBoundsListenerModifier { bounds in
                     listener = TapListener(
                         id: "tap-listener-\(name)",
-                        numberOfTaps: numberOfTaps, 
+                        numberOfTaps: numberOfTaps,
                         boundingBox: bounds,
                         action: action
                     )

@@ -11,7 +11,7 @@ public enum VisionQualityState: String {
     case Detected = "Detected"
     case DetectedLowQuality = "Detected (Low Quality)"
     case NotDetected = "No Detection"
-    
+
     var level: Int {
         switch self {
         case .Detected:
@@ -22,7 +22,7 @@ public enum VisionQualityState: String {
             0
         }
     }
-    
+
     init(level: Int) {
         if level == 2 {
             self = .Detected

@@ -50,18 +50,18 @@ public class FaceTrackerModel: ObservableObject {
 
         interactionManager.moveCursorOffset(by: CGPoint(x: newXOffset, y: newYOffset))
     }
-    
+
     @discardableResult
     public func captureOriginGeometry() -> Bool {
         guard let currentGeometry = currentGeometry else {
             return false
         }
-        
+
         self.originGeometry = currentGeometry
         print("SET FACE ORIGIN GEOM")
         return true
     }
-    
+
     // MARK: - init
     init(interactionManager: InteractionManager) {
         self.interactionManager = interactionManager
@@ -82,7 +82,7 @@ extension FaceTrackerModel: FaceTrackerDelegate {
     func faceCaptureQualityDidChange(_ quality: VisionQualityState) {
         DispatchQueue.main.async { [self] in
             self.quality = quality
-            
+
             if quality == .NotDetected {
                 currentGeometry = nil
             }

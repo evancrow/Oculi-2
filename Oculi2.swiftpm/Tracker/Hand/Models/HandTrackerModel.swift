@@ -42,7 +42,11 @@ class HandTrackerModel: ObservableObject {
     private var handDataForCurrentPose: [Hand] = []
     private var pastHands: [Hand] = []
     // Pinch data.
-    private var pinching = false
+    private var pinching = false {
+        didSet {
+            interactionManager.switchToDragging = pinching
+        }
+    }
     // Grouped pinches.
     private var pinchGroupTimer: Timer? = nil
     private var currentNumberOfPinches = 0
@@ -53,7 +57,6 @@ class HandTrackerModel: ObservableObject {
     /// Used to reset all data points.
     /// Useful for when recalibrating or detection stopped.
     func resetAll() {
-        print("RESET ALL")
         currentHand = nil
         handDataForCurrentPose = []
         pastHands = []
@@ -93,44 +96,11 @@ class HandTrackerModel: ObservableObject {
         return (totalXChange, totalYChange, xDifferences.count)
     }
 
-    private func checkForDrag() {
-        guard let currentLocation = pastHands.last?.tipLocation(finger: .index),
-            let previousLocation = pastHands.dropLast().last?.tipLocation(finger: .index)
-        else {
-            return
-        }
-
-        // Find delta of x/y to move the cursor.
-        // Calculate the differences in x and y coordinates.
-        let xDifference = currentLocation.x - previousLocation.x
-        let yDifference = currentLocation.y - previousLocation.y
-
-        switch state {
-        case .confirmedPose(let handPose):
-            switch handPose {
-            case .pinch:
-                print(xDifference, yDifference)
-                guard xDifference > HandTrackerDefaults.DragThreshold || yDifference > HandTrackerDefaults.DragThreshold else {
-                    return
-                }
-                
-                interactionManager.onDrag(
-                    delta: CGSize(width: xDifference, height: yDifference)
-                )
-            default:
-                return
-            }
-        default:
-            return
-        }
-    }
-
     private func onPinch() {
         guard !pinching else {
             return
         }
 
-        print("PINCHING STARTED")
         // Set pinching to true so duplicate notifications are not sent.
         pinching = true
 
@@ -148,10 +118,10 @@ class HandTrackerModel: ObservableObject {
         guard pinching else {
             return
         }
-        
+
         print("PINCHING STOPPED")
         pinching = false
-       
+
         pinchDurationTimer?.invalidate()
         pinchGroupTimer = Timer.scheduledTimer(
             withTimeInterval: HandTrackerDefaults.MaximumPinchSeperationTime,
@@ -212,11 +182,11 @@ class HandTrackerModel: ObservableObject {
 extension HandTrackerModel: HandTrackerDelegate {
     func handDidChange(to value: Hand) {
         self.calibrationModel.receivedNewHand(data: value)
-        
+
         guard calibrationModel.calibrationState == .Calibrated else {
             return
         }
-        
+
         self.currentHand = value
         self.pastHands.append(value)
         self.handDataForCurrentPose.append(value)
@@ -226,7 +196,6 @@ extension HandTrackerModel: HandTrackerDelegate {
             switch handPose {
             case .pinch:
                 onPinch()
-                checkForDrag()
             default:
                 pinchingStopped()
             }

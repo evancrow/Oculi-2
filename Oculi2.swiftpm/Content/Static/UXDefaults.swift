@@ -19,6 +19,6 @@ public struct UXDefaults {
     /// How much to increase the speed of the cursor by.
     /// `Width` is how much to increase `x` by and `height` for `y`.
     public static var cursorMovementMultiplier: CGSize = CGSize(width: 40, height: 40)
-    
+
     static let maximumPageWidth: CGFloat = 600
 }

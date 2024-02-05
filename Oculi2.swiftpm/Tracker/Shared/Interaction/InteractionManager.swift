@@ -13,8 +13,15 @@ public class InteractionManager: ObservableObject {
     private var viewWidth: CGFloat = 0
     private var viewHeight: CGFloat = 0
     private var showCursorTimer: Timer?
-   
+
     var interactionEnabled = false
+    var switchToDragging = false {
+        didSet {
+            if switchToDragging {
+                showCursor = false
+            }
+        }
+    }
     @Published var showCursor = false
     @Published private(set) var cursorOffset: CGPoint = .zero {
         didSet {
@@ -22,15 +29,18 @@ public class InteractionManager: ObservableObject {
                 showCursor = false
                 return
             }
-            
+
             onCursorOffsetChanged()
-            showCursor = true
-            showCursorTimer?.invalidate()
-            showCursorTimer = Timer.scheduledTimer(
-                withTimeInterval: UXDefaults.cursorShowTime,
-                repeats: false
-            ) { [weak self] _ in
-                self?.showCursor = false
+
+            if !switchToDragging {
+                showCursor = true
+                showCursorTimer?.invalidate()
+                showCursorTimer = Timer.scheduledTimer(
+                    withTimeInterval: UXDefaults.cursorShowTime,
+                    repeats: false
+                ) { [weak self] _ in
+                    self?.showCursor = false
+                }
             }
         }
     }
@@ -69,7 +79,7 @@ public class InteractionManager: ObservableObject {
         guard interactionEnabled else {
             return
         }
-        
+
         if checkIfOffsetIsInBounds(point) {
             cursorOffset = point
         }
@@ -79,12 +89,17 @@ public class InteractionManager: ObservableObject {
         guard interactionEnabled else {
             return
         }
-        
+
         if checkIfOffsetIsInBounds(value) {
-            withAnimation(.linear) {
-                cursorOffset.x += value.x
-                cursorOffset.y += value.y
+            if switchToDragging {
+                onDrag(delta: CGSize(width: value.x, height: value.y))
+            } else {
+                withAnimation(.linear) {
+                    cursorOffset.x += value.x
+                    cursorOffset.y += value.y
+                }
             }
+
         }
     }
 
@@ -123,7 +138,7 @@ public class InteractionManager: ObservableObject {
         guard interactionEnabled else {
             return
         }
-        
+
         for listener in possibleListeners {
             // Calculate all corners of the boundingBox
             let origin = boundingBox.origin
@@ -133,10 +148,9 @@ public class InteractionManager: ObservableObject {
             let bottomRight = CGPoint(x: origin.x + size.width, y: origin.y + size.height)
 
             // Check if listener.boundingBox contains any of these points
-            if listener.boundingBox.contains(origin) ||
-               listener.boundingBox.contains(topRight) ||
-               listener.boundingBox.contains(bottomLeft) ||
-               listener.boundingBox.contains(bottomRight) 
+            if listener.boundingBox.contains(origin) || listener.boundingBox.contains(topRight)
+                || listener.boundingBox.contains(bottomLeft)
+                || listener.boundingBox.contains(bottomRight)
             {
                 // listener.boundingBox contains at least one corner of boundingBox.
                 listener.action()
@@ -254,7 +268,8 @@ extension InteractionManager {
     public func onDrag(delta: CGSize) {
         let possibleListeners = dragListeners
         possibleListeners.forEach {
-            $0.delta = delta
+            $0.delta.width += delta.width
+            $0.delta.height += delta.height
         }
         runListenersWithMatchingBoundingBox(
             boundingBox: getCursorBoundingBox(),
@@ -308,7 +323,7 @@ extension InteractionManager {
 
     fileprivate func onCursorOffsetChanged() {
         let boundingBox = getCursorBoundingBox()
-        
+
         // Updates each listner if the cursor is hovering over it's view.
         for listener in hoverListeners {
             withAnimation {

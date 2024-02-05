@@ -197,7 +197,7 @@ struct CalibrationPage: View {
     ) {
         self._step = State(initialValue: step)
         self._needsToOpenSettings = State(initialValue: needsToOpenSettings)
-        
+
     }
 
     init() {

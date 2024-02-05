@@ -55,7 +55,7 @@ public struct InteractionViewWrapper<Content: View>: View {
                     Spacer()
                 }
 
-                if interactionManager.showCursor &&  model.calibrated {
+                if interactionManager.showCursor && model.calibrated {
                     Cursor(offset: interactionManager.cursorOffset)
                 }
             }

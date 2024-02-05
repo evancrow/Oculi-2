@@ -59,61 +59,58 @@ class HandPoseCalibrationModel: ObservableObject {
     }
 
     func finishCalibration() {
+        func standardDeviation(of array: [CGFloat]) -> CGFloat {
+            let length = CGFloat(array.count)
+            let avg = array.reduce(0, +) / length
+            let sumOfSquaredAvgDiff = array.map { pow($0 - avg, 2.0) }.reduce(0, +)
+            return sqrt(sumOfSquaredAvgDiff / length)
+        }
+
+        func removeOutliers(from distances: [CGFloat]) -> [CGFloat] {
+            guard distances.count > 4 else { return distances }
+
+            let sortedDistances = distances.sorted()
+            let q1 = sortedDistances[sortedDistances.count / 4]
+            let q3 = sortedDistances[(3 * sortedDistances.count) / 4]
+            let iqr = q3 - q1
+            let lowerBound = q1 - 1.5 * iqr
+            let upperBound = q3 + 1.5 * iqr
+
+            return distances.filter { distance in
+                distance >= lowerBound && distance <= upperBound
+            }
+        }
+
         for pose in HandPose.allCases where pose != .none {
             let dataForPose = calibrationData[pose, default: []]
+            let filteredDataForPose = dataForPose.map { removeOutliers(from: $0.tipDistances) }
 
-            // Function to remove outliers for a given distance array.
-            func removeOutliers(from distances: [CGFloat]) -> [Bool] {
-                let sortedDistances = distances.sorted()
-                let q1 = sortedDistances[sortedDistances.count / 4]
-                let q3 = sortedDistances[(3 * sortedDistances.count) / 4]
-                let iqr = q3 - q1
-                let lowerBound = q1 - 1.5 * iqr
-                let upperBound = q3 + 1.5 * iqr
-
-                return distances.map { distance in
-                    distance >= lowerBound && distance <= upperBound
-                }
-            }
-
-            // Determine which data points are not outliers for each tip distance.
-            var includeHand = Array(repeating: true, count: dataForPose.count)
-            for index in 0..<4 {
-                let distanceFlags = removeOutliers(from: dataForPose.map { $0.tipDistances[index] })
-                for (i, flag) in distanceFlags.enumerated() {
-                    includeHand[i] = includeHand[i] && flag
-                }
-            }
-
-            // Filter dataForPose based on includeHand flags.
-            let filteredDataForPose = zip(dataForPose, includeHand).compactMap { $1 ? $0 : nil }
-
-            // Proceed with calculation only if there's enough data after filtering.
             guard !filteredDataForPose.isEmpty else {
                 calibrationState = .Failed
                 return
             }
 
-            // Calculate total and average tip distances for filtered data.
             let totalTipDistances = filteredDataForPose.reduce(
-                into: Array(repeating: 0, count: 4)
+                into: Array(repeating: 0.0, count: 4)
             ) { partialResult, currentResult in
                 for index in 0..<4 {
-                    partialResult[index] += currentResult.tipDistances[index]
+                    partialResult[index] += currentResult[index]
                 }
             }
+
             let totalTipDistancesAverage: [CGFloat] = totalTipDistances.map {
                 $0 / CGFloat(filteredDataForPose.count)
             }
+            let sd = standardDeviation(of: totalTipDistancesAverage)
 
             guard totalTipDistancesAverage.allSatisfy({ $0 > 0 }) else {
                 calibrationState = .Failed
                 return
             }
 
-            HandPoseMargins.UpdateMargins(for: pose, margins: totalTipDistancesAverage)
+            HandPoseMargins.UpdateMargins(
+                for: pose, margins: totalTipDistancesAverage, standardDeviation: sd)
         }
-
 
         if calibrationState != .Failed {
             calibrationState = .Calibrated

@@ -25,7 +25,7 @@ struct DebugPopup: View {
                         text: faceTrackerModel.quality.rawValue,
                         expandedSize: false
                     )
-                    
+
                     TextSection(
                         header: "Hand Quality",
                         text: handTrackerModel.quality.rawValue,

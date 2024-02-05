@@ -86,7 +86,9 @@ class AVModel: NSObject, ObservableObject {
         device: AVCaptureDevice, resolution: CGSize
     ) {
         let deviceDiscoverySession = AVCaptureDevice.DiscoverySession(
-            deviceTypes: [.builtInWideAngleCamera], mediaType: .video, position: .front)
+            deviceTypes: [.builtInLiDARDepthCamera, .builtInWideAngleCamera], mediaType: .video,
+            position: .front
+        )
 
         if let device = deviceDiscoverySession.devices.first {
             if let deviceInput = try? AVCaptureDeviceInput(device: device) {
@@ -97,6 +99,13 @@ class AVModel: NSObject, ObservableObject {
                 if let highestResolution = self.highestResolution420Format(for: device) {
                     try device.lockForConfiguration()
                     device.activeFormat = highestResolution.format
+
+                    if device.isFocusModeSupported(.continuousAutoFocus) {
+                        device.focusMode = .continuousAutoFocus
+                    } else if device.isFocusModeSupported(.autoFocus) {
+                        device.focusMode = .autoFocus
+                    }
+
                     device.unlockForConfiguration()
 
                     return (device, highestResolution.resolution)
@@ -115,7 +124,7 @@ class AVModel: NSObject, ObservableObject {
 
         // Create a serial dispatch queue used for the sample buffer delegate as well as when a still image is captured.
         // A serial dispatch queue must be used to guarantee that video frames will be delivered in order.
-        let videoDataOutputQueue = DispatchQueue(label: "com.evan.eye-tracker.VisionFaceTrack")
+        let videoDataOutputQueue = DispatchQueue(label: "com.evan.oculi")
         videoDataOutput.setSampleBufferDelegate(self, queue: videoDataOutputQueue)
 
         if captureSession.canAddOutput(videoDataOutput) {
