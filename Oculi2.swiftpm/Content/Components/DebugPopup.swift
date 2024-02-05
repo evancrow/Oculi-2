@@ -21,7 +21,13 @@ struct DebugPopup: View {
 
                 VStack(spacing: PaddingSizes._12) {
                     TextSection(
-                        header: "Quality",
+                        header: "Face Quality",
+                        text: faceTrackerModel.quality.rawValue,
+                        expandedSize: false
+                    )
+                    
+                    TextSection(
+                        header: "Hand Quality",
                         text: handTrackerModel.quality.rawValue,
                         expandedSize: false
                     )

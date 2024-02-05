@@ -12,20 +12,14 @@ import Vision
 
 struct HandTrackerDefaults {
     /// Number of times a pose must be detected before it is confirmed to be active.
-    static let ConfirmationAmount = 4
+    static let ConfirmationAmount = 3
 
-    static let MaximumPinchSeperationTime: Double = 1.5
+    static let MaximumPinchSeperationTime: Double = 1
     /// Duration (in seconds) of how long a pinch must be before it is confirmed to be "long".
     /// Similar to a long tap.
     static let LongPinchDuration = 2
-
     static let MinimumScrollDelta: CGFloat = 30
-    
-   
-    /// How much to increase the speed of the cursor by.
-    /// `Width` is how much to increase `x` by and `height` for `y`.
-    public static var MovementMultiplier: CGSize = CGSize(width: 1500, height: 1200)
-    public static let DragThreshold: Double = 50
+    static let DragThreshold: Double = 50
 }
 
 class HandTrackerModel: ObservableObject {
@@ -48,24 +42,18 @@ class HandTrackerModel: ObservableObject {
     private var handDataForCurrentPose: [Hand] = []
     private var pastHands: [Hand] = []
     // Pinch data.
-    private var pinching = false {
-        didSet {
-            if pinching != oldValue, !pinching {
-                pinchingStopped()
-            }
-        }
-    }
+    private var pinching = false
     // Grouped pinches.
     private var pinchGroupTimer: Timer? = nil
     private var currentNumberOfPinches = 0
     // Long pinches.
     private var pinchDurationTimer: Timer? = nil
     private var pinchDuration = 0
-    private var savedCursorBoundingBox: CGRect?
 
     /// Used to reset all data points.
     /// Useful for when recalibrating or detection stopped.
     func resetAll() {
+        print("RESET ALL")
         currentHand = nil
         handDataForCurrentPose = []
         pastHands = []
@@ -76,8 +64,6 @@ class HandTrackerModel: ObservableObject {
 
         pinchDurationTimer = nil
         pinchDuration = 0
-        
-        savedCursorBoundingBox = nil
     }
 
     // MARK: - Interactions
@@ -107,8 +93,7 @@ class HandTrackerModel: ObservableObject {
         return (totalXChange, totalYChange, xDifferences.count)
     }
 
-    /// Using X and Y delta changes from the point interaction, moves an on screen cursor.
-    private func moveCursor() {
+    private func checkForDrag() {
         guard let currentLocation = pastHands.last?.tipLocation(finger: .index),
             let previousLocation = pastHands.dropLast().last?.tipLocation(finger: .index)
         else {
@@ -120,47 +105,23 @@ class HandTrackerModel: ObservableObject {
         let xDifference = currentLocation.x - previousLocation.x
         let yDifference = currentLocation.y - previousLocation.y
 
-        func setCursorOffset() {
-            // Temp. disable to try using head as a cursor.
-            /*
-            interactionManager.moveCursorOffset(
-                by: .init(
-                    x: xDifference * HandTrackerDefaults.MovementMultiplier.width,
-                    y: -yDifference * HandTrackerDefaults.MovementMultiplier.height
-                )
-            )
-             */
-        }
-
-        func setCursorOffsetForDrag() {
-            guard xDifference > HandTrackerDefaults.DragThreshold || yDifference > HandTrackerDefaults.DragThreshold else {
-                return
-            }
-            
-            interactionManager.onDrag(
-                delta: CGSize(width: xDifference, height: yDifference)
-            )
-        }
-
         switch state {
-        case .none:
-            setCursorOffset()
-        case .possiblePose(let handPose, _):
-            switch handPose {
-            case .none:
-                setCursorOffset()
-            default:
-                return
-            }
         case .confirmedPose(let handPose):
             switch handPose {
             case .pinch:
-                setCursorOffsetForDrag()
-            case .none:
-                setCursorOffset()
+                print(xDifference, yDifference)
+                guard xDifference > HandTrackerDefaults.DragThreshold || yDifference > HandTrackerDefaults.DragThreshold else {
+                    return
+                }
+                
+                interactionManager.onDrag(
+                    delta: CGSize(width: xDifference, height: yDifference)
+                )
             default:
                 return
             }
+        default:
+            return
         }
     }
 
@@ -169,7 +130,7 @@ class HandTrackerModel: ObservableObject {
             return
         }
 
-        self.savedCursorBoundingBox = interactionManager.getCursorBoundingBox()
+        print("PINCHING STARTED")
         // Set pinching to true so duplicate notifications are not sent.
         pinching = true
 
@@ -179,12 +140,8 @@ class HandTrackerModel: ObservableObject {
             self.pinchDuration += 1
         }
 
-        if let pinchGroupTimer = pinchGroupTimer, pinchGroupTimer.isValid {
-            currentNumberOfPinches += 1
-            pinchGroupTimer.invalidate()
-        } else {
-            currentNumberOfPinches = 1
-        }
+        currentNumberOfPinches += 1
+        pinchGroupTimer?.invalidate()
     }
 
     private func pinchingStopped() {
@@ -192,6 +149,7 @@ class HandTrackerModel: ObservableObject {
             return
         }
         
+        print("PINCHING STOPPED")
         pinching = false
        
         pinchDurationTimer?.invalidate()
@@ -201,13 +159,11 @@ class HandTrackerModel: ObservableObject {
             block: { [self] _ in
                 if pinchDuration >= HandTrackerDefaults.LongPinchDuration {
                     interactionManager.onLongTap(
-                        duration: pinchDuration,
-                        boundingBox: savedCursorBoundingBox
+                        duration: pinchDuration
                     )
                 } else {
                     interactionManager.onTap(
-                        numberOfTaps: currentNumberOfPinches,
-                        boundingBox: savedCursorBoundingBox
+                        numberOfTaps: currentNumberOfPinches
                     )
                 }
 
@@ -218,8 +174,6 @@ class HandTrackerModel: ObservableObject {
                 // Reset the group of pinches.
                 currentNumberOfPinches = 0
                 pinchGroupTimer = nil
-                
-                savedCursorBoundingBox = nil
             }
         )
     }
@@ -272,14 +226,13 @@ extension HandTrackerModel: HandTrackerDelegate {
             switch handPose {
             case .pinch:
                 onPinch()
+                checkForDrag()
             default:
                 pinchingStopped()
             }
         default:
             pinchingStopped()
         }
-
-        moveCursor()
     }
 
     func handPoseDidChange(to value: HandPose) {
@@ -335,7 +288,7 @@ extension HandTrackerModel: HandTrackerDelegate {
         } else {
             quality = .NotDetected
             state = .none
-            resetAll()
+            // resetAll()
         }
     }
 }

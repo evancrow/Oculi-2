@@ -45,8 +45,8 @@ public class FaceTrackerModel: ObservableObject {
             }
         }()
 
-        let newXOffset = (xOffset * LegacyUXDefaults.movementMultiplier.width)
-        let newYOffset = (yOffset * LegacyUXDefaults.movementMultiplier.height)
+        let newXOffset = (xOffset * UXDefaults.cursorMovementMultiplier.width)
+        let newYOffset = (yOffset * UXDefaults.cursorMovementMultiplier.height)
 
         interactionManager.moveCursorOffset(by: CGPoint(x: newXOffset, y: newYOffset))
     }
@@ -58,6 +58,7 @@ public class FaceTrackerModel: ObservableObject {
         }
         
         self.originGeometry = currentGeometry
+        print("SET FACE ORIGIN GEOM")
         return true
     }
     

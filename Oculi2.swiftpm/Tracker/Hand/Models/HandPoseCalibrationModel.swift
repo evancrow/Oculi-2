@@ -9,7 +9,7 @@ import Combine
 import Foundation
 
 struct HandTrackerCalibrationDefaults {
-    static let SetUpTime = 5
+    static let SetUpTime = 6
     static let CalibrationTime = 5
     static var TotalTimePerPose: Int {
         SetUpTime + CalibrationTime
@@ -59,11 +59,43 @@ class HandPoseCalibrationModel: ObservableObject {
     }
 
     func finishCalibration() {
-        calibrationState = .Calibrated
-
         for pose in HandPose.allCases where pose != .none {
             let dataForPose = calibrationData[pose, default: []]
-            let totalTipDistances = dataForPose.reduce(
+
+            // Function to remove outliers for a given distance array.
+            func removeOutliers(from distances: [CGFloat]) -> [Bool] {
+                let sortedDistances = distances.sorted()
+                let q1 = sortedDistances[sortedDistances.count / 4]
+                let q3 = sortedDistances[(3 * sortedDistances.count) / 4]
+                let iqr = q3 - q1
+                let lowerBound = q1 - 1.5 * iqr
+                let upperBound = q3 + 1.5 * iqr
+
+                return distances.map { distance in
+                    distance >= lowerBound && distance <= upperBound
+                }
+            }
+
+            // Determine which data points are not outliers for each tip distance.
+            var includeHand = Array(repeating: true, count: dataForPose.count)
+            for index in 0..<4 {
+                let distanceFlags = removeOutliers(from: dataForPose.map { $0.tipDistances[index] })
+                for (i, flag) in distanceFlags.enumerated() {
+                    includeHand[i] = includeHand[i] && flag
+                }
+            }
+
+            // Filter dataForPose based on includeHand flags.
+            let filteredDataForPose = zip(dataForPose, includeHand).compactMap { $1 ? $0 : nil }
+
+            // Proceed with calculation only if there's enough data after filtering.
+            guard !filteredDataForPose.isEmpty else {
+                calibrationState = .Failed
+                return
+            }
+
+            // Calculate total and average tip distances for filtered data.
+            let totalTipDistances = filteredDataForPose.reduce(
                 into: Array(repeating: 0, count: 4)
             ) { partialResult, currentResult in
                 for index in 0..<4 {
@@ -71,7 +103,7 @@ class HandPoseCalibrationModel: ObservableObject {
                 }
             }
             let totalTipDistancesAverage: [CGFloat] = totalTipDistances.map {
-                $0 / CGFloat(dataForPose.count)
+                $0 / CGFloat(filteredDataForPose.count)
             }
 
             guard totalTipDistancesAverage.allSatisfy({ $0 > 0 }) else {
@@ -80,6 +112,11 @@ class HandPoseCalibrationModel: ObservableObject {
             }
 
             HandPoseMargins.UpdateMargins(for: pose, margins: totalTipDistancesAverage)
+        }
+
+
+        if calibrationState != .Failed {
+            calibrationState = .Calibrated
         }
     }
 

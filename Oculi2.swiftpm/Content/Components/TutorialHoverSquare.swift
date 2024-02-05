@@ -21,8 +21,8 @@ struct TutorialHoverSquare: View {
         Rectangle()
             .foregroundStyle(filled ? Color.Oculi.Pink : Color.Oculi.Pink.opacity(0))
             .frame(
-                width: filled ? TutorialHoverSquareDefaults.size : 0,
-                height: filled ? TutorialHoverSquareDefaults.size : 0
+                width: TutorialHoverSquareDefaults.size,
+                height: TutorialHoverSquareDefaults.size
             )
             .overlay(
                 Rectangle()
@@ -30,7 +30,8 @@ struct TutorialHoverSquare: View {
                     .stroke(Color.Oculi.Pink, lineWidth: 10)
                     .frame(
                         width: TutorialHoverSquareDefaults.size,
-                        height: TutorialHoverSquareDefaults.size)
+                        height: TutorialHoverSquareDefaults.size
+                    )
             )
             .onHover(name: "tutorial") { isHover in
                 guard !complete else {

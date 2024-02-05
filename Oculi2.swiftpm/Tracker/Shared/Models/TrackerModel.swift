@@ -40,9 +40,7 @@ public class TrackerModel: ObservableObject {
     }
 
     public func updateQuality() {
-        self.quality = VisionQualityState(
-            level: min(faceTrackerModel.quality.level, handTrackerModel.quality.level)
-        )
+        self.quality = faceTrackerModel.quality
     }
     
     @discardableResult

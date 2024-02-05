@@ -32,7 +32,7 @@ struct TappingTutorial: View {
                 Text(twoTap ? "Two Taps - Tapped!" : "Two Taps")
             }
             .buttonStyle(DefaultButtonStyle())
-            .onTap(name: "two-taps") {
+            .onTap(name: "two-taps", numberOfTaps: 2) {
                 twoTap.toggle()
             }
 
@@ -50,7 +50,11 @@ struct TappingTutorial: View {
                 onComplete()
             } label: {
                 Text("Next Page")
-            }.buttonStyle(DefaultButtonStyle())
+            }
+            .buttonStyle(DefaultButtonStyle())
+            .onTap(name: "next-page") {
+                onComplete()
+            }
         }
     }
 }

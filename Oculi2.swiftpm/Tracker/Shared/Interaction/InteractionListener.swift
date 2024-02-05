@@ -9,7 +9,7 @@ import CoreGraphics
 import Foundation
 
 public class InteractionListener: Equatable {
-    private let id: String
+    public let id: String
 
     /// The bounding box for the view the listener is attached too.
     public let boundingBox: CGRect
@@ -24,7 +24,7 @@ public class InteractionListener: Equatable {
     }
 
     public static func == (lhs: InteractionListener, rhs: InteractionListener) -> Bool {
-        lhs.id == rhs.id
+        lhs.id == rhs.id && lhs.boundingBox == rhs.boundingBox
     }
 }
 

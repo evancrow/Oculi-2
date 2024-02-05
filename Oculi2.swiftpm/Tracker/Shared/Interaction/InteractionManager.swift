@@ -15,7 +15,7 @@ public class InteractionManager: ObservableObject {
     private var showCursorTimer: Timer?
    
     var interactionEnabled = false
-    @Published var showCursor = true
+    @Published var showCursor = false
     @Published private(set) var cursorOffset: CGPoint = .zero {
         didSet {
             if !interactionEnabled {
@@ -123,11 +123,24 @@ public class InteractionManager: ObservableObject {
         guard interactionEnabled else {
             return
         }
-        print("POSSIBLE LISTENERS:", possibleListeners.map(\.boundingBox))
         
-        // Run the action for each listener if the cursor is inside the listener's view.
-        for listener in possibleListeners where listener.boundingBox.contains(boundingBox.origin) {
-            listener.action()
+        for listener in possibleListeners {
+            // Calculate all corners of the boundingBox
+            let origin = boundingBox.origin
+            let size = boundingBox.size
+            let topRight = CGPoint(x: origin.x + size.width, y: origin.y)
+            let bottomLeft = CGPoint(x: origin.x, y: origin.y + size.height)
+            let bottomRight = CGPoint(x: origin.x + size.width, y: origin.y + size.height)
+
+            // Check if listener.boundingBox contains any of these points
+            if listener.boundingBox.contains(origin) ||
+               listener.boundingBox.contains(topRight) ||
+               listener.boundingBox.contains(bottomLeft) ||
+               listener.boundingBox.contains(bottomRight) 
+            {
+                // listener.boundingBox contains at least one corner of boundingBox.
+                listener.action()
+            }
         }
     }
 
@@ -213,11 +226,11 @@ extension InteractionManager {
     }
 
     // MARK: - Tap
-    public func onTap(numberOfTaps: Int, boundingBox: CGRect?) {
+    public func onTap(numberOfTaps: Int) {
         // Filter listeners to those that match the number of taps.
         let possibleListeners = tapListeners.filter { $0.numberOfTaps == numberOfTaps }
         runListenersWithMatchingBoundingBox(
-            boundingBox: boundingBox ?? getCursorBoundingBox(),
+            boundingBox: getCursorBoundingBox(),
             possibleListeners: possibleListeners
         )
 
@@ -226,10 +239,10 @@ extension InteractionManager {
         print("Bounding Box:", getCursorBoundingBox())
     }
 
-    public func onLongTap(duration: Int, boundingBox: CGRect?) {
+    public func onLongTap(duration: Int) {
         let possibleListeners = longTapListeners.filter { $0.duration == duration }
         runListenersWithMatchingBoundingBox(
-            boundingBox: boundingBox ?? getCursorBoundingBox(),
+            boundingBox: getCursorBoundingBox(),
             possibleListeners: possibleListeners
         )
 
@@ -271,13 +284,13 @@ extension InteractionManager {
     }
 
     // MARK: - Zoom
-    public func onZoom(scale: Double, boundingBox: CGRect?) {
+    public func onZoom(scale: Double) {
         let possibleListeners = zoomListeners
         possibleListeners.forEach {
             $0.scale = scale
         }
         runListenersWithMatchingBoundingBox(
-            boundingBox: boundingBox ?? getCursorBoundingBox(),
+            boundingBox: getCursorBoundingBox(),
             possibleListeners: possibleListeners
         )
 
@@ -295,6 +308,7 @@ extension InteractionManager {
 
     fileprivate func onCursorOffsetChanged() {
         let boundingBox = getCursorBoundingBox()
+        
         // Updates each listner if the cursor is hovering over it's view.
         for listener in hoverListeners {
             withAnimation {
