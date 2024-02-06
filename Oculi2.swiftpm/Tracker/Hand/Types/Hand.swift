@@ -9,9 +9,8 @@ import Foundation
 import Vision
 
 struct Hand {
-    // MARK: - Tips
     let tips: [Finger: CGPoint]
-    let allTips: [CGPoint]
+    let confidence: [Finger: VNConfidence]
     let tipDistances: [CGFloat]
 
     func tipLocation(finger: Finger) -> CGPoint {
@@ -19,7 +18,7 @@ struct Hand {
     }
 
     // MARK: - init
-    init(tips: [Finger: CGPoint]) {
+    init(tips: [Finger: CGPoint], confidence: [Finger: VNConfidence]) {
         func createDistances(joint: [Finger: CGPoint]) -> [CGFloat] {
             return [
                 joint[.thumb]!.calculateDistance(to: joint[.index]!),
@@ -31,7 +30,7 @@ struct Hand {
 
         // Tips
         self.tips = tips
-        self.allTips = Array(tips.values)
+        self.confidence = confidence
         self.tipDistances = createDistances(joint: tips)
     }
 }

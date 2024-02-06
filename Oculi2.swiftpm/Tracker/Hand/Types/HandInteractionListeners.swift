@@ -37,14 +37,16 @@ class LongTapListener: InteractionListener {
 }
 
 class DragListener: InteractionListener, ObservableObject {
-    public var delta: CGSize = .zero
+    public var delta: CGSize
     @Published var dragging: Bool = false
 
     init(
         id: String = "",
         boundingBox: CGRect,
+        delta: CGSize,
         onDrag: @escaping (CGSize) -> Void
     ) {
+        self.delta = delta
         super.init(id: id, boundingBox: boundingBox, action: {})
         self.action = {
             onDrag(self.delta)

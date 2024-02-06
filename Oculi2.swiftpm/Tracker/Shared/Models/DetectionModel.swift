@@ -16,6 +16,7 @@ enum DetectionTypes {
 class DetectionModel {
     // MARK: - Properties
     let detectionTypes: [DetectionTypes]
+    let handDataBuffer = Buffer<Hand>(size: 3)
 
     // MARK: - Detection Request
     public func createDetectionRequests(
@@ -142,11 +143,9 @@ class DetectionModel {
                     to: .none
                 )
                 delegate.handPoseConfidenceChanged(
-                    thumb: .nan,
-                    index: .nan,
-                    middle: .nan,
-                    ring: .nan,
-                    litte: .nan
+                    to: Finger.allCases.reduce(into: [:]) { result, finger in
+                        result[finger] = .nan
+                    }
                 )
 
                 print("[Error] detectedHandPose failed at: \(location)")
@@ -160,51 +159,59 @@ class DetectionModel {
             return
         }
 
-        // Get the points for each finger.
-        guard let thumbPoints = try? result.recognizedPoints(.thumb),
-            let indexFingerPoints = try? result.recognizedPoints(.indexFinger),
-            let middleFingerPoints = try? result.recognizedPoints(.middleFinger),
-            let ringFingerPoints = try? result.recognizedPoints(.ringFinger),
-            let littleFingerPoints = try? result.recognizedPoints(.littleFinger)
-        else {
-            onFail(location: "Find Points")
-            return
-        }
-
         // Look for tip points.
-        guard let thumbTipPoint = thumbPoints[.thumbTip],
-            let indexTipPoint = indexFingerPoints[.indexTip],
-            let middleTipPoint = middleFingerPoints[.middleTip],
-            let ringTipPoint = ringFingerPoints[.ringTip],
-            let littleTipPoint = littleFingerPoints[.littleTip]
+        guard let thumbTipPoint = try? result.recognizedPoint(.thumbTip),
+            let indexTipPoint = try? result.recognizedPoint(.indexTip),
+            let middleTipPoint = try? result.recognizedPoint(.middleTip),
+            let ringTipPoint = try? result.recognizedPoint(.ringTip),
+            let littleTipPoint = try? result.recognizedPoint(.littleTip)
         else {
             onFail(location: "Tip Points")
             return
         }
 
-        DispatchQueue.main.async {
-            let hand = Hand(
+        handDataBuffer.enqueue(
+            value: Hand(
                 tips: [
                     .thumb: thumbTipPoint.location,
                     .index: indexTipPoint.location,
                     .middle: middleTipPoint.location,
                     .ring: ringTipPoint.location,
                     .little: littleTipPoint.location,
+                ],
+                confidence: [
+                    .thumb: thumbTipPoint.confidence,
+                    .index: indexTipPoint.confidence,
+                    .middle: middleTipPoint.confidence,
+                    .ring: ringTipPoint.confidence,
+                    .little: littleTipPoint.confidence,
                 ]
             )
+        )
 
+        let allHands = self.handDataBuffer.getAllValues()
+        
+        // Average the data for the last few hands to reduce variation in the data.
+        var averageTipData: [Finger: CGPoint] = [:]
+        var averageConfidenceData: [Finger: VNConfidence] = [:]
+        for finger in Finger.allCases {
+            for hand in allHands {
+                averageTipData[finger, default: CGPoint()].add(
+                    point: hand.tipLocation(finger: finger)
+                )
+                averageConfidenceData[finger, default: 0] += hand.confidence[finger, default: 0]
+            }
+        }
+        let averageHand = Hand(
+            tips: averageTipData.mapValues { $0.apply { $0 / CGFloat(allHands.count) } },
+            confidence: averageConfidenceData.mapValues { $0 / Float(allHands.count) }
+        )
+
+        DispatchQueue.main.async {
             // Convert points from Vision coordinates to AVFoundation coordinates.
-            delegate.handPoseDidChange(
-                to: HandPoseModel.predictHandPose(from: hand)
-            )
-            delegate.handDidChange(to: hand)
-            delegate.handPoseConfidenceChanged(
-                thumb: thumbTipPoint.confidence,
-                index: indexTipPoint.confidence,
-                middle: middleTipPoint.confidence,
-                ring: ringTipPoint.confidence,
-                litte: littleTipPoint.confidence
-            )
+            delegate.handPoseDidChange(to: HandPoseModel.predictHandPose(from: averageHand))
+            delegate.handDidChange(to: averageHand)
+            delegate.handPoseConfidenceChanged(to: averageHand.confidence)
         }
     }
 

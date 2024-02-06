@@ -107,6 +107,7 @@ private struct DragViewModifier: ViewModifier {
     @EnvironmentObject var interactionManager: InteractionManager
     @State var listener: DragListener?
     @State var draggingListener: AnyCancellable?
+    @State var offset: CGSize = .zero
 
     let name: String
     let onDrag: (CGSize) -> Void
@@ -117,12 +118,14 @@ private struct DragViewModifier: ViewModifier {
                 ViewBoundsListenerModifier { bounds in
                     listener = DragListener(
                         id: "drag-listener-\(name)",
-                        boundingBox: bounds,
-                        onDrag: onDrag
-                    )
+                        boundingBox: bounds.offsetBy(dx: offset.width, dy: offset.height),
+                        delta: offset
+                    ) { offset in
+                        self.offset = offset
+                        onDrag(offset)
+                    }
                     draggingListener = listener?.$dragging.sink { value in
                         if !value {
-                            print("DRAGGING DONE, UPDATE")
                             interactionManager.updateListener(listener!)
                         }
                     }
@@ -131,11 +134,13 @@ private struct DragViewModifier: ViewModifier {
                         interactionManager.updateListener(listener!)
                     }
                 }
-            ).onDisappear {
+            )
+            .onDisappear {
                 if let listener = listener {
                     interactionManager.removeListener(listener)
                 }
             }
+            .offset(offset)
     }
 }
 
@@ -145,10 +150,7 @@ extension View {
         onDrag: @escaping (CGSize) -> Void
     ) -> some View {
         return self.modifier(
-            DragViewModifier(
-                name: name,
-                onDrag: onDrag
-            )
+            DragViewModifier(name: name, onDrag: onDrag)
         )
     }
 }

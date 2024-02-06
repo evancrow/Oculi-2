@@ -153,6 +153,8 @@ class HandTrackerModel: ObservableObject {
         let direction: Axis = totalYChange >= totalXChange ? .vertical : .horizontal
         let delta = direction == .vertical ? totalYChange : totalXChange
 
+        print(numberOfPoints, delta)
+
         guard numberOfPoints > 5, delta >= HandTrackerDefaults.MinimumScrollDelta else {
             return false
         }
@@ -195,6 +197,8 @@ extension HandTrackerModel: HandTrackerDelegate {
             switch handPose {
             case .pinch:
                 onPinch()
+            case .twoFinger:
+                checkForScroll()
             default:
                 pinchingStopped()
             }
@@ -232,25 +236,27 @@ extension HandTrackerModel: HandTrackerDelegate {
         }
     }
 
-    func handPoseConfidenceChanged(
-        thumb: VNConfidence,
-        index: VNConfidence,
-        middle: VNConfidence,
-        ring: VNConfidence,
-        litte: VNConfidence
-    ) {
+    func handPoseConfidenceChanged(to values: [Finger: VNConfidence]) {
         let highQuality: VNConfidence = UXDefaults.highCaptureQuality
         let lowQuality: VNConfidence = UXDefaults.minimumCaptureQuality
 
+        let thumb = values[.thumb] ?? .nan
+        let index = values[.index] ?? .nan
+        let middle = values[.middle] ?? .nan
+        let ring = values[.ring] ?? .nan
+        let little = values[.little] ?? .nan
+
         if thumb > highQuality,
             index > highQuality,
-            middle > highQuality
+            middle > highQuality,
+            ring > highQuality
         {
             quality = .Detected
         } else if thumb > lowQuality,
             index > lowQuality,
             middle > lowQuality,
-            ring > lowQuality
+            ring > lowQuality,
+            little > lowQuality
         {
             quality = .DetectedLowQuality
         } else {

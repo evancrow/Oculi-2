@@ -12,9 +12,26 @@ public class InteractionManager: ObservableObject {
     // MARK: - Cursor
     private var viewWidth: CGFloat = 0
     private var viewHeight: CGFloat = 0
-    private var showCursorTimer: Timer?
 
     var interactionEnabled = false
+
+    // MARK: - Scrolling
+    private var scrolling = false {
+        didSet {
+            if scrolling {
+                scrollingTimer?.invalidate()
+                scrollingTimer = Timer.scheduledTimer(
+                    withTimeInterval: 2,
+                    repeats: false
+                ) { [weak self] _ in
+                    self?.scrolling = false
+                }
+            }
+        }
+    }
+    private var scrollingTimer: Timer?
+
+    // MARK: - Dragging
     @Published var switchToDragging = false {
         didSet {
             if !switchToDragging {
@@ -25,7 +42,10 @@ public class InteractionManager: ObservableObject {
         }
     }
     var activeDragListener: DragListener?
+
+    // MARK: - Cursor
     @Published var showCursor = false
+    private var showCursorTimer: Timer?
     @Published private(set) var cursorOffset: CGPoint = .zero {
         didSet {
             if !interactionEnabled {
@@ -34,16 +54,13 @@ public class InteractionManager: ObservableObject {
             }
 
             onCursorOffsetChanged()
-
-            if !switchToDragging {
-                showCursor = true
-                showCursorTimer?.invalidate()
-                showCursorTimer = Timer.scheduledTimer(
-                    withTimeInterval: UXDefaults.cursorShowTime,
-                    repeats: false
-                ) { [weak self] _ in
-                    self?.showCursor = false
-                }
+            showCursor = true
+            showCursorTimer?.invalidate()
+            showCursorTimer = Timer.scheduledTimer(
+                withTimeInterval: UXDefaults.cursorShowTime,
+                repeats: false
+            ) { [weak self] _ in
+                self?.showCursor = false
             }
         }
     }
@@ -63,14 +80,13 @@ public class InteractionManager: ObservableObject {
     }
 
     public func getCursorBoundingBox() -> CGRect {
-        let origin = getOrigin()
-        let currentX = origin.x + cursorOffset.x
-        let currentY = origin.y + cursorOffset.y
+        var origin = getOrigin()
+        origin.add(point: cursorOffset)
         let offsetForMin = UXDefaults.cursorHeight / 2
 
         let boundingBox = CGRect(
-            x: currentX - offsetForMin,
-            y: currentY - offsetForMin,
+            x: origin.x - offsetForMin,
+            y: origin.y - offsetForMin,
             width: UXDefaults.cursorHeight,
             height: UXDefaults.cursorHeight
         )
@@ -89,7 +105,7 @@ public class InteractionManager: ObservableObject {
     }
 
     public func moveCursorOffset(by value: CGPoint) {
-        guard interactionEnabled else {
+        guard interactionEnabled, !scrolling else {
             return
         }
 
@@ -98,11 +114,9 @@ public class InteractionManager: ObservableObject {
                 if switchToDragging {
                     onDrag(delta: CGSize(width: value.x, height: value.y))
                 }
-
-                cursorOffset.x += value.x
-                cursorOffset.y += value.y
+                
+                cursorOffset.add(point: value)
             }
-
         }
     }
 

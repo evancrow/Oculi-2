@@ -10,8 +10,8 @@ import Foundation
 public struct UXDefaults {
     /// The minimum quality allowed by `VisionModel` to recognize the face as usable.
     /// The lower the number, the less strict and less acurate the data may be.
-    internal static let minimumCaptureQuality: Float = 0.3
-    internal static let highCaptureQuality: Float = 0.5
+    internal static let minimumCaptureQuality: Float = 0.15
+    internal static let highCaptureQuality: Float = 0.3
 
     // MARK: - Cursor
     internal static let cursorShowTime: Double = 2

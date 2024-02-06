@@ -73,7 +73,7 @@ struct HandPoseMargins {
     public static func Within(margin: CGFloat, value: CGFloat, sd: CGFloat, isCritical: Bool)
         -> Bool
     {
-        let buffer = isCritical ? (Buffer + sd * 0.25) : (Buffer + sd * 0.5)
+        let buffer = isCritical ? (Buffer + sd * 0.25) : (Buffer + sd * 0.75)
         return ((margin - buffer)...(margin + buffer)).contains(value)
     }
 }
@@ -95,7 +95,7 @@ class HandPoseModel {
         func checkPinchPose(hand: Hand) -> Bool {
             // Assuming 0 is the index for thumb-index distance.
             return tipPointsAllWithin(
-                margins: HandPoseMargins.PinchMargins, 
+                margins: HandPoseMargins.PinchMargins,
                 sds: HandPoseMargins.PinchMarginsSD,
                 criticalIndex: 0
             )
@@ -104,7 +104,7 @@ class HandPoseModel {
         func checkTwoFingerPointPose(hand: Hand) -> Bool {
             // Assuming 1 is the index for index-middle distance.
             return tipPointsAllWithin(
-                margins: HandPoseMargins.TwoPointMargins, 
+                margins: HandPoseMargins.TwoPointMargins,
                 sds: HandPoseMargins.TwoPointMarginsSD,
                 criticalIndex: 1
             )

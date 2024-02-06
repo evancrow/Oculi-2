@@ -9,13 +9,7 @@ import Foundation
 import Vision
 
 protocol HandTrackerDelegate {
-    func handPoseDidChange(to value: HandPose)
-    func handPoseConfidenceChanged(
-        thumb: VNConfidence,
-        index: VNConfidence,
-        middle: VNConfidence,
-        ring: VNConfidence,
-        litte: VNConfidence
-    )
     func handDidChange(to value: Hand)
+    func handPoseDidChange(to value: HandPose)
+    func handPoseConfidenceChanged(to values: [Finger: VNConfidence])
 }

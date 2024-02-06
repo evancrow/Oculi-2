@@ -31,7 +31,7 @@ struct Popup<Content: View>: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 18, height: 18)
-                    
+
                 }
                 .onLongTap(name: "Expand", action: toggleExpandedState)
             }

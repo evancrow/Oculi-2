@@ -21,7 +21,7 @@ struct ContentView: View {
             VStack {
                 HStack(alignment: .top, spacing: PaddingSizes._12) {
                     Spacer()
-                    
+
                     if faceModel.quality == .NotDetected && trackerModel.trackingEnabled {
                         Popup(expanded: $noFaceExpanded, collapsedIcon: "person.fill.xmark") {
                             VStack(spacing: PaddingSizes._32) {
@@ -36,7 +36,7 @@ struct ContentView: View {
                             }
                         }
                     }
-                    
+
                     if handModel.quality == .NotDetected && trackerModel.trackingEnabled {
                         Popup(expanded: $noHandExpanded, collapsedIcon: "hand.raised.slash.fill") {
                             VStack(spacing: PaddingSizes._32) {

@@ -21,7 +21,6 @@ struct DraggingTutorial: View {
                 Rectangle()
                     .frame(width: 100, height: 100)
                     .foregroundStyle(Color.Oculi.Pink)
-                    .offset(filledSquareOffset)
                     .onDrag(name: "Tutorial") { offset in
                         filledSquareOffset = offset
                         checkIfDragTutorialDone()
