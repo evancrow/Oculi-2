@@ -173,63 +173,6 @@ public class InteractionManager: ObservableObject {
     }
 }
 
-// MARK: - Face
-extension InteractionManager {
-    private var blinkListeners: [BlinkListener] {
-        interactionListeners.compactMap { $0 as? BlinkListener }
-    }
-    private var longBlinkListeners: [LongBlinkListener] {
-        interactionListeners.compactMap { $0 as? LongBlinkListener }
-    }
-    private var quickActionListeners: [QuickActionListener] {
-        interactionListeners.compactMap { $0 as? QuickActionListener }
-    }
-
-    // MARK: - Blink Methods
-    public func onBlink(numberOfBlinks: Int, isTracking: Bool) {
-        if numberOfBlinks == LegacyUXDefaults.quickActionBlinks {
-            handleQuickActions(isTracking: isTracking)
-            return
-        }
-
-        // Only allow Quick Actions if tracking is false, else just return.
-        guard isTracking else {
-            return
-        }
-
-        // Filter listeners to those that match the number of blinks.
-        let possibleListeners = blinkListeners.filter { $0.numberOfBlinks == numberOfBlinks }
-        runListenersWithMatchingBoundingBox(
-            boundingBox: getCursorBoundingBox(),
-            possibleListeners: possibleListeners
-        )
-    }
-
-    public func onLongBlink(duration: Int) {
-        // Filter listeners to those that match the number of blinks.
-        let possibleListeners = longBlinkListeners.filter { $0.duration == duration }
-        runListenersWithMatchingBoundingBox(
-            boundingBox: getCursorBoundingBox(),
-            possibleListeners: possibleListeners
-        )
-    }
-
-    // MARK: - Quick Actions
-    private func handleQuickActions(isTracking: Bool) {
-        // Sort by priority, greatest to least.
-        let listeners = quickActionListeners.sorted { $0.priority > $1.priority }
-
-        for listener in listeners {
-            // Run the first listener's (with passing conditions) action.
-            if listener.conditionsMet(), isTracking || listener.overrideIsTracking {
-                listener.action()
-                break
-            }
-        }
-    }
-}
-
-// MARK: - Hand
 extension InteractionManager {
     private var tapListeners: [TapListener] {
         interactionListeners.compactMap { $0 as? TapListener }

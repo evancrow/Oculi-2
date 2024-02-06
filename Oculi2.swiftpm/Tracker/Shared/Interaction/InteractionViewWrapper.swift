@@ -18,30 +18,6 @@ public struct InteractionViewWrapper<Content: View>: View {
 
     private let content: Content
 
-    @ViewBuilder
-    var permissionErrorView: some View {
-        if let nextRequiredPermission = permissionModel.nextRequiredPermission {
-            switch nextRequiredPermission.1 {
-            case .denied, .unknown:
-                ErrorView(
-                    error:
-                        "Please give \(nextRequiredPermission.0.rawValue) permission in settings",
-                    buttonText: "Check Again",
-                    buttonAction: model.resetAVModel
-                )
-            case .unable:
-                ErrorView(
-                    error:
-                        "Your device is not able to support requirment: \(nextRequiredPermission.0.rawValue)"
-                )
-            default:
-                EmptyView()
-            }
-        } else {
-            EmptyView()
-        }
-    }
-
     public var body: some View {
         GeometryReader { geom in
             ZStack {
