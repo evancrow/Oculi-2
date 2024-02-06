@@ -21,15 +21,16 @@ struct DraggingTutorial: View {
                 Rectangle()
                     .frame(width: 100, height: 100)
                     .foregroundStyle(Color.Oculi.Pink)
+                    .offset(filledSquareOffset)
+                    .onDrag(name: "Tutorial") { offset in
+                        filledSquareOffset = offset
+                        checkIfDragTutorialDone()
+                    }
+                    .onViewBoundsChange { bounds in
+                        filledSquareBounds = bounds
+                    }
 
                 Spacer()
-            }.onDrag(name: "Tutorial") { offset in
-                filledSquareOffset = offset
-                checkIfDragTutorialDone()
-            }
-            .offset(filledSquareOffset)
-            .onViewBoundsChange { bounds in
-                filledSquareBounds = bounds
             }
 
             HStack {
@@ -39,8 +40,9 @@ struct DraggingTutorial: View {
                     .stroke(style: StrokeStyle(lineWidth: 10))
                     .foregroundStyle(Color.Oculi.Pink)
                     .frame(width: 150, height: 150)
-            }.onViewBoundsChange { bounds in
-                emptySquareBounds = bounds
+                    .onViewBoundsChange { bounds in
+                        emptySquareBounds = bounds
+                    }
             }
         }.frame(height: 150)
     }

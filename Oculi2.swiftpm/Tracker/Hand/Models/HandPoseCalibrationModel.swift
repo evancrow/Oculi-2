@@ -61,9 +61,10 @@ class HandPoseCalibrationModel: ObservableObject {
     func finishCalibration() {
         func standardDeviation(of array: [CGFloat]) -> CGFloat {
             let length = CGFloat(array.count)
-            let avg = array.reduce(0, +) / length
-            let sumOfSquaredAvgDiff = array.map { pow($0 - avg, 2.0) }.reduce(0, +)
-            return sqrt(sumOfSquaredAvgDiff / length)
+            guard length > 1 else { return 0 }
+            let average = array.reduce(0, +) / length
+            let sumOfSquaredDiffs = array.map { pow($0 - average, 2) }.reduce(0, +)
+            return sqrt(sumOfSquaredDiffs / (length - 1))
         }
 
         func removeOutliers(from distances: [CGFloat]) -> [CGFloat] {

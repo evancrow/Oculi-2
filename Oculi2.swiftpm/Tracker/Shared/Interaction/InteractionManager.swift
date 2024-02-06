@@ -15,13 +15,16 @@ public class InteractionManager: ObservableObject {
     private var showCursorTimer: Timer?
 
     var interactionEnabled = false
-    var switchToDragging = false {
+    @Published var switchToDragging = false {
         didSet {
-            if switchToDragging {
-                showCursor = false
+            if !switchToDragging {
+                activeDragListener?.dragging = false
+                activeDragListener?.action()
+                activeDragListener = nil
             }
         }
     }
+    var activeDragListener: DragListener?
     @Published var showCursor = false
     @Published private(set) var cursorOffset: CGPoint = .zero {
         didSet {
@@ -95,7 +98,7 @@ public class InteractionManager: ObservableObject {
                 if switchToDragging {
                     onDrag(delta: CGSize(width: value.x, height: value.y))
                 }
-                
+
                 cursorOffset.x += value.x
                 cursorOffset.y += value.y
             }
@@ -148,12 +151,17 @@ public class InteractionManager: ObservableObject {
             let bottomRight = CGPoint(x: origin.x + size.width, y: origin.y + size.height)
 
             // Check if listener.boundingBox contains any of these points
-            if listener.boundingBox.contains(origin) || listener.boundingBox.contains(topRight)
+            if listener.boundingBox.contains(origin)
+                || listener.boundingBox.contains(topRight)
                 || listener.boundingBox.contains(bottomLeft)
                 || listener.boundingBox.contains(bottomRight)
             {
                 // listener.boundingBox contains at least one corner of boundingBox.
                 listener.action()
+
+                if let listener = listener as? DragListener {
+                    self.activeDragListener = listener
+                }
             }
         }
     }
@@ -244,53 +252,51 @@ extension InteractionManager {
         guard !switchToDragging else {
             return
         }
-        
+
         // Filter listeners to those that match the number of taps.
         let possibleListeners = tapListeners.filter { $0.numberOfTaps == numberOfTaps }
         runListenersWithMatchingBoundingBox(
             boundingBox: getCursorBoundingBox(),
             possibleListeners: possibleListeners
         )
-
-        print(">>> TAP <<<")
-        print("Number of Taps:", numberOfTaps)
-        print("Bounding Box:", getCursorBoundingBox())
     }
 
     public func onLongTap(duration: Int) {
         guard !switchToDragging else {
             return
         }
-        
+
         let possibleListeners = longTapListeners.filter { $0.duration == duration }
         runListenersWithMatchingBoundingBox(
             boundingBox: getCursorBoundingBox(),
             possibleListeners: possibleListeners
         )
-
-        print(">>> LONG TAP <<<")
-        print("Duration:", duration)
-        print("Bounding Box:", getCursorBoundingBox())
     }
 
     public func onDrag(delta: CGSize) {
+        func updateActiveDragOffset() {
+            guard let activeDragListener = activeDragListener else {
+                return
+            }
+
+            activeDragListener.dragging = true
+            activeDragListener.delta.width += delta.width
+            activeDragListener.delta.height += delta.height
+            activeDragListener.action()
+        }
+
         guard switchToDragging else {
             return
         }
-        
-        let possibleListeners = dragListeners
-        possibleListeners.forEach {
-            $0.delta.width += delta.width
-            $0.delta.height += delta.height
-        }
-        runListenersWithMatchingBoundingBox(
-            boundingBox: getCursorBoundingBox(),
-            possibleListeners: possibleListeners
-        )
 
-        print(">>> Drag <<<")
-        print("Delta:", delta)
-        print("Bounding Box:", getCursorBoundingBox())
+        if activeDragListener == nil {
+            runListenersWithMatchingBoundingBox(
+                boundingBox: getCursorBoundingBox(),
+                possibleListeners: dragListeners
+            )
+        }
+
+        updateActiveDragOffset()
     }
 
     // MARK: - Scroll
@@ -298,7 +304,7 @@ extension InteractionManager {
         guard !switchToDragging else {
             return
         }
-        
+
         let possibleListeners = scrollListeners.filter { $0.direction == direction }
         possibleListeners.forEach {
             $0.distance = distance
@@ -319,7 +325,7 @@ extension InteractionManager {
         guard !switchToDragging else {
             return
         }
-        
+
         let possibleListeners = zoomListeners
         possibleListeners.forEach {
             $0.scale = scale

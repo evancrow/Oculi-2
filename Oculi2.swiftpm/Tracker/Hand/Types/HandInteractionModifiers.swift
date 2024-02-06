@@ -5,6 +5,7 @@
 //  Created by Evan Crow on 2/2/24.
 //
 
+import Combine
 import Foundation
 import SwiftUI
 import SwiftUIIntrospect
@@ -104,7 +105,8 @@ extension View {
 // MARK: - Drag
 private struct DragViewModifier: ViewModifier {
     @EnvironmentObject var interactionManager: InteractionManager
-    @State var listener: InteractionListener?
+    @State var listener: DragListener?
+    @State var draggingListener: AnyCancellable?
 
     let name: String
     let onDrag: (CGSize) -> Void
@@ -118,8 +120,16 @@ private struct DragViewModifier: ViewModifier {
                         boundingBox: bounds,
                         onDrag: onDrag
                     )
+                    draggingListener = listener?.$dragging.sink { value in
+                        if !value {
+                            print("DRAGGING DONE, UPDATE")
+                            interactionManager.updateListener(listener!)
+                        }
+                    }
 
-                    interactionManager.updateListener(listener!)
+                    if !listener!.dragging {
+                        interactionManager.updateListener(listener!)
+                    }
                 }
             ).onDisappear {
                 if let listener = listener {
@@ -187,7 +197,9 @@ private struct AutoScrollViewModifier: ViewModifier {
                 .scrollView,
                 on: .iOS(.v16, .v17)
             ) { scrollView in
-                self.scrollView = scrollView
+                DispatchQueue.main.async {
+                    self.scrollView = scrollView
+                }
             }
             .onScroll(
                 name: name,

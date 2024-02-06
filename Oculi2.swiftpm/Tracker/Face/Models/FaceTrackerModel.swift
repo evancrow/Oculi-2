@@ -58,7 +58,6 @@ public class FaceTrackerModel: ObservableObject {
         }
 
         self.originGeometry = currentGeometry
-        print("SET FACE ORIGIN GEOM")
         return true
     }
 

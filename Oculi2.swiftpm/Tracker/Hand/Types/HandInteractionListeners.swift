@@ -36,8 +36,9 @@ class LongTapListener: InteractionListener {
     }
 }
 
-class DragListener: InteractionListener {
+class DragListener: InteractionListener, ObservableObject {
     public var delta: CGSize = .zero
+    @Published var dragging: Bool = false
 
     init(
         id: String = "",

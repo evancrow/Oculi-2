@@ -119,7 +119,6 @@ class HandTrackerModel: ObservableObject {
             return
         }
 
-        print("PINCHING STOPPED")
         pinching = false
 
         pinchDurationTimer?.invalidate()
@@ -245,7 +244,7 @@ extension HandTrackerModel: HandTrackerDelegate {
 
         if thumb > highQuality,
             index > highQuality,
-            middle > lowQuality
+            middle > highQuality
         {
             quality = .Detected
         } else if thumb > lowQuality,

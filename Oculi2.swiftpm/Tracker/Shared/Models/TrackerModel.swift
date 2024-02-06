@@ -18,7 +18,6 @@ public class TrackerModel: ObservableObject {
 
     @Published private(set) var trackingEnabled = false {
         didSet {
-            print("TRACKING ENABLED:", trackingEnabled)
             interactionManager.interactionEnabled = trackingEnabled
         }
     }

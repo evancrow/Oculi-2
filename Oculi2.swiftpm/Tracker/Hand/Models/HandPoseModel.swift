@@ -48,7 +48,7 @@ enum HandPose: String, CaseIterable {
 }
 
 struct HandPoseMargins {
-    static private let Buffer: CGFloat = 0.055
+    static private let Buffer: CGFloat = 0.075
     static private(set) var PinchMargins: [CGFloat] = Array(repeating: 1, count: 5)
     static private(set) var PinchMarginsSD: CGFloat = 0
     static private(set) var TwoPointMargins: [CGFloat] = Array(repeating: 1, count: 5)
@@ -70,35 +70,44 @@ struct HandPoseMargins {
     }
 
     /// Checks if a value is within the margin calculated at calibration.
-    public static func Within(margin: CGFloat, value: CGFloat, standardDeviation: CGFloat) -> Bool {
-        let dynamicBuffer = Buffer + standardDeviation * 0.5  // Adjust this factor as needed
-        return ((margin - dynamicBuffer)...(margin + dynamicBuffer)).contains(value)
+    public static func Within(margin: CGFloat, value: CGFloat, sd: CGFloat, isCritical: Bool)
+        -> Bool
+    {
+        let buffer = isCritical ? (Buffer + sd * 0.25) : (Buffer + sd * 0.5)
+        return ((margin - buffer)...(margin + buffer)).contains(value)
     }
 }
 
 class HandPoseModel {
     static func predictHandPose(from hand: Hand) -> HandPose {
-        func tipPointsAllWithin(margins: [CGFloat], standardDeviation: CGFloat) -> Bool {
-            return hand.tipDistances.enumerated().allSatisfy {
-                HandPoseMargins.Within(
-                    margin: margins[$0],
-                    value: $1,
-                    standardDeviation: standardDeviation
+        func tipPointsAllWithin(margins: [CGFloat], sds: CGFloat, criticalIndex: Int) -> Bool {
+            return hand.tipDistances.enumerated().allSatisfy { index, distance in
+                let isCritical = index == criticalIndex
+                return HandPoseMargins.Within(
+                    margin: margins[index],
+                    value: distance,
+                    sd: sds,
+                    isCritical: isCritical
                 )
             }
         }
 
         func checkPinchPose(hand: Hand) -> Bool {
-            tipPointsAllWithin(
-                margins: HandPoseMargins.PinchMargins,
-                standardDeviation: HandPoseMargins.PinchMarginsSD)
+            // Assuming 0 is the index for thumb-index distance.
+            return tipPointsAllWithin(
+                margins: HandPoseMargins.PinchMargins, 
+                sds: HandPoseMargins.PinchMarginsSD,
+                criticalIndex: 0
+            )
         }
 
-        // Method for checking the 'twoFingerPoint' pose.
         func checkTwoFingerPointPose(hand: Hand) -> Bool {
-            tipPointsAllWithin(
-                margins: HandPoseMargins.TwoPointMargins,
-                standardDeviation: HandPoseMargins.TwoPointMarginsSD)
+            // Assuming 1 is the index for index-middle distance.
+            return tipPointsAllWithin(
+                margins: HandPoseMargins.TwoPointMargins, 
+                sds: HandPoseMargins.TwoPointMarginsSD,
+                criticalIndex: 1
+            )
         }
 
         if checkPinchPose(hand: hand) {

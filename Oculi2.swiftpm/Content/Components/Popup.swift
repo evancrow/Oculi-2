@@ -29,7 +29,9 @@ struct Popup<Content: View>: View {
                 Button(action: toggleExpandedState) {
                     Image(systemName: collapsedIcon ?? "")
                         .resizable()
+                        .scaledToFit()
                         .frame(width: 18, height: 18)
+                    
                 }
                 .onLongTap(name: "Expand", action: toggleExpandedState)
             }

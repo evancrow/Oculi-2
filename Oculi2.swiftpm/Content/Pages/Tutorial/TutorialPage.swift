@@ -39,7 +39,7 @@ enum TutorialStep: String {
         case .scrolling:
             return "Hover over an object, then use two fingers to scroll up and down."
         case .dragging:
-            return "Pinch and move your fingers to drag objects."
+            return "Hover over an object, then pinch and move your head to drag objects."
         case .zooming:
             return "Double tap to zoom in and out."
         }

@@ -57,6 +57,7 @@ public struct InteractionViewWrapper<Content: View>: View {
 
                 if interactionManager.showCursor && model.calibrated {
                     Cursor(offset: interactionManager.cursorOffset)
+                        .opacity(interactionManager.switchToDragging ? 0.5 : 1)
                 }
             }
             .environmentObject(geometryProxyValue)
