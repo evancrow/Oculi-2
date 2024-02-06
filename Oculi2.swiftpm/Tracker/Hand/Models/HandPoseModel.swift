@@ -73,7 +73,10 @@ struct HandPoseMargins {
     public static func Within(margin: CGFloat, value: CGFloat, sd: CGFloat, isCritical: Bool)
         -> Bool
     {
-        let buffer = isCritical ? (Buffer + sd * 0.25) : (Buffer + sd * 0.75)
+        let buffer =
+            isCritical
+            ? (HandTrackerDefaults.PoseBuffer + sd * HandTrackerDefaults.CriticalPointSDWeight)
+            : (HandTrackerDefaults.PoseBuffer + sd * HandTrackerDefaults.NonCriticalPointSDWeight)
         return ((margin - buffer)...(margin + buffer)).contains(value)
     }
 }

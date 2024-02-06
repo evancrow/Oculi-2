@@ -16,7 +16,7 @@ enum DetectionTypes {
 class DetectionModel {
     // MARK: - Properties
     let detectionTypes: [DetectionTypes]
-    let handDataBuffer = Buffer<Hand>(size: 3)
+    let handDataBuffer = Buffer<Hand>(size: HandTrackerDefaults.HandDataAverage)
 
     // MARK: - Detection Request
     public func createDetectionRequests(
@@ -190,7 +190,7 @@ class DetectionModel {
         )
 
         let allHands = self.handDataBuffer.getAllValues()
-        
+
         // Average the data for the last few hands to reduce variation in the data.
         var averageTipData: [Finger: CGPoint] = [:]
         var averageConfidenceData: [Finger: VNConfidence] = [:]
@@ -208,7 +208,6 @@ class DetectionModel {
         )
 
         DispatchQueue.main.async {
-            // Convert points from Vision coordinates to AVFoundation coordinates.
             delegate.handPoseDidChange(to: HandPoseModel.predictHandPose(from: averageHand))
             delegate.handDidChange(to: averageHand)
             delegate.handPoseConfidenceChanged(to: averageHand.confidence)

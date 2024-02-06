@@ -11,14 +11,24 @@ import SwiftUI
 import Vision
 
 struct HandTrackerDefaults {
+    // -- Data --
     /// Number of times a pose must be detected before it is confirmed to be active.
     static let ConfirmationAmount = 3
+    static let HandDataAverage = 3
 
+    // -- Margin --
+    static let PoseBuffer: CGFloat = 0.075
+    static let CriticalPointSDWeight: CGFloat = 0.25
+    static let NonCriticalPointSDWeight: CGFloat = 0.75
+
+    // -- Pinch --
     static let MaximumPinchSeperationTime: Double = 1
     /// Duration (in seconds) of how long a pinch must be before it is confirmed to be "long".
     /// Similar to a long tap.
     static let LongPinchDuration = 2
-    static let MinimumScrollDelta: CGFloat = 30
+
+    // -- Actions --
+    static let ScrollThreshold: CGFloat = 30
     static let DragThreshold: Double = 50
 }
 
@@ -151,11 +161,13 @@ class HandTrackerModel: ObservableObject {
     private func checkForScroll() -> Bool {
         let (totalXChange, totalYChange, numberOfPoints) = getXYDelta()
         let direction: Axis = totalYChange >= totalXChange ? .vertical : .horizontal
-        let delta = direction == .vertical ? totalYChange : totalXChange
+        var delta = direction == .vertical ? totalYChange : totalXChange
+        // The delta is usually very small (ex: 0.0001). Multiply it by 1000 to make it usuable.
+        delta = delta * 1000
 
         print(numberOfPoints, delta)
 
-        guard numberOfPoints > 5, delta >= HandTrackerDefaults.MinimumScrollDelta else {
+        guard numberOfPoints > 5, delta >= HandTrackerDefaults.ScrollThreshold else {
             return false
         }
 
@@ -262,7 +274,6 @@ extension HandTrackerModel: HandTrackerDelegate {
         } else {
             quality = .NotDetected
             state = .none
-            // resetAll()
         }
     }
 }

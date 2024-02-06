@@ -114,7 +114,7 @@ public class InteractionManager: ObservableObject {
                 if switchToDragging {
                     onDrag(delta: CGSize(width: value.x, height: value.y))
                 }
-                
+
                 cursorOffset.add(point: value)
             }
         }
