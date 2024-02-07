@@ -65,9 +65,10 @@ struct DictationField: View {
                     }
 
                     self.text = transcriptForTextField
-                    
+
                     unfocusFieldTimer?.invalidate()
-                    unfocusFieldTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: false) { _ in
+                    unfocusFieldTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: false) {
+                        _ in
                         focusTextField = false
                     }
                 }

@@ -14,27 +14,38 @@ private struct SliderDefaults {
 
 struct Slider: View {
     @Binding var value: CGFloat
+    @State private var offset: CGSize = .zero
+    @State private var width: CGFloat = 0
+
+    var sliderBoundsWidth: CGFloat {
+        width - (PaddingSizes._52 * 2) - SliderDefaults.ButtonSize
+    }
 
     var body: some View {
-        GeometryReader { geom in
-            ZStack {
+        ZStack {
+            GeometryReader { geom in
                 Rectangle()
                     .frame(height: SliderDefaults.SliderHeight)
                     .foregroundStyle(Color(uiColor: .secondarySystemFill))
-
-                HStack {
-                    let width = geom.size.width - (PaddingSizes._52 * 2) - SliderDefaults.ButtonSize
-                    Rectangle()
-                        .frame(width: SliderDefaults.ButtonSize, height: SliderDefaults.ButtonSize)
-                        .foregroundStyle(Color.Oculi.Pink)
-                        .onScroll(name: "slider", direction: .horizontal) { offset in
-                            value = offset / width
-                        }
-
-                    Spacer()
-                        .frame(width: width * (1 - value))
-                }.padding(.horizontal, PaddingSizes._52)
+                    .useEffect(deps: geom.size) { value in
+                        self.width = value.width
+                    }
             }
+
+            HStack {
+                Rectangle()
+                    .frame(width: SliderDefaults.ButtonSize, height: SliderDefaults.ButtonSize)
+                    .foregroundStyle(Color.Oculi.Pink)
+                    .onDrag(
+                        name: "slider",
+                        lockAxis: .horizontal,
+                        maximum: CGSize(width: sliderBoundsWidth, height: 0)
+                    ) { offset in
+                        value = offset.width / sliderBoundsWidth
+                    }
+
+                Spacer()
+            }.padding(.horizontal, PaddingSizes._52)
         }.frame(height: SliderDefaults.ButtonSize)
     }
 }

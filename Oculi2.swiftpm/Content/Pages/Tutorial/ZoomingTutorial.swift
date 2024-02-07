@@ -60,7 +60,8 @@ struct ZoomingTutorial: View {
 }
 
 #Preview {
-    ZoomingTutorial {} onComplete: {
+    ZoomingTutorial {
+    } onComplete: {
     }
     .environmentObject(InteractionManager())
     .environmentObject(GeometryProxyValue())

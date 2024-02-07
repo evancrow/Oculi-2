@@ -33,7 +33,8 @@ struct SegmentedPicker: View {
                         .padding(.vertical, PaddingSizes._12)
                         .frame(maxHeight: .infinity)
                         .foregroundStyle(
-                            selectedOption == option && showSelected ? Color.Oculi.Button.Label : Color(uiColor: .label)
+                            selectedOption == option && showSelected
+                                ? Color.Oculi.Button.Label : Color(uiColor: .label)
                         )
                         .background(
                             selectedOption == option && showSelected ? Color.Oculi.Pink : nil

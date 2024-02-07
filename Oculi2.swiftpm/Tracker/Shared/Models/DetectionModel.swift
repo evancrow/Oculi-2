@@ -148,14 +148,14 @@ class DetectionModel {
                     }
                 )
 
-                print("[Error] detectedHandPose failed at: \(location)")
+                // print("[Error] detectedHandPose failed at: \(location)")
             }
         }
 
         guard let results = request.results as? [VNHumanHandPoseObservation],
             let result = results.first
         else {
-            // onFail(location: "Request Results")
+            onFail(location: "Request Results")
             return
         }
 

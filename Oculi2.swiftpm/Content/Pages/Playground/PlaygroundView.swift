@@ -48,10 +48,11 @@ struct PlaygroundView: View {
                         }.onTap(name: "decrease") {
                             updateCursorSpeed(multiplier: 0.75)
                         }.buttonStyle(
-                            DefaultButtonStyle(disabled: UXDefaults.cursorMovementMultiplier.width <= 15)
+                            DefaultButtonStyle(
+                                disabled: UXDefaults.cursorMovementMultiplier.width <= 15)
                         )
                         .disabled(UXDefaults.cursorMovementMultiplier.width <= 15)
-                        
+
                         Spacer()
 
                         Button {
@@ -61,7 +62,8 @@ struct PlaygroundView: View {
                         }.onTap(name: "Increase") {
                             updateCursorSpeed(multiplier: 1.25)
                         }.buttonStyle(
-                            DefaultButtonStyle(disabled: UXDefaults.cursorMovementMultiplier.width >= 95)
+                            DefaultButtonStyle(
+                                disabled: UXDefaults.cursorMovementMultiplier.width >= 95)
                         )
                         .disabled(UXDefaults.cursorMovementMultiplier.width >= 95)
                     }.id(updateCursorButtonState)
@@ -81,7 +83,7 @@ struct PlaygroundView: View {
             Spacer()
         }.padding(.bottom, geometryProxyValue.geom?.safeAreaInsets.bottom)
     }
-    
+
     func updateCursorSpeed(multiplier: Double) {
         UXDefaults.cursorMovementMultiplier.apply { value in
             value * multiplier
