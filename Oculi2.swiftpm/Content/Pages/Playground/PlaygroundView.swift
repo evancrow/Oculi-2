@@ -17,69 +17,71 @@ struct PlaygroundView: View {
         HStack {
             Spacer()
 
-            VStack(spacing: PaddingSizes._52) {
-                TextSection(
-                    header: "Thank You",
-                    text:
-                        "This is the last page of the Oculi demo. Thank you for trying it out, I appreciate your time and consideration!"
-                )
-
-                TextSection(
-                    header: "Tip",
-                    text:
-                        "You can always re-calibrate or restart the tutorial by tapping the options at the bottom of the page."
-                )
-
-                VStack(alignment: .leading, spacing: PaddingSizes._12) {
-                    Text("Screen Brightness")
-                    Slider(value: $screenBrightness)
-                }.onChange(of: screenBrightness) { value in
-                    UIScreen.main.brightness = value
-                }
-
-                VStack(alignment: .leading, spacing: PaddingSizes._12) {
-                    Text("Cursor Speed")
-
-                    HStack {
-                        Button {
-                            updateCursorSpeed(multiplier: 0.75)
-                        } label: {
-                            Text("Decrease")
-                        }.onTap(name: "decrease") {
-                            updateCursorSpeed(multiplier: 0.75)
-                        }.buttonStyle(
-                            DefaultButtonStyle(
-                                disabled: UXDefaults.cursorMovementMultiplier.width <= 15)
-                        )
-                        .disabled(UXDefaults.cursorMovementMultiplier.width <= 15)
-
-                        Spacer()
-
-                        Button {
-                            updateCursorSpeed(multiplier: 1.25)
-                        } label: {
-                            Text("Increase")
-                        }.onTap(name: "Increase") {
-                            updateCursorSpeed(multiplier: 1.25)
-                        }.buttonStyle(
-                            DefaultButtonStyle(
-                                disabled: UXDefaults.cursorMovementMultiplier.width >= 95)
-                        )
-                        .disabled(UXDefaults.cursorMovementMultiplier.width >= 95)
-                    }.id(updateCursorButtonState)
-                }
-
-                VStack(alignment: .leading, spacing: PaddingSizes._12) {
-                    Text("Speech Recognition")
-                    if !name.isEmpty {
-                        Text("Hey, \(name)!")
+            ScrollView {
+                VStack(spacing: PaddingSizes._52) {
+                    TextSection(
+                        header: "Thank You",
+                        text:
+                            "This is the last page of the Oculi demo. Thank you for trying it out, I appreciate your time and consideration!"
+                    )
+                    
+                    TextSection(
+                        header: "Tip",
+                        text:
+                            "You can always re-calibrate or restart the tutorial by tapping the options at the bottom of the page."
+                    )
+                    
+                    VStack(alignment: .leading, spacing: PaddingSizes._12) {
+                        Text("Screen Brightness")
+                        Slider(value: $screenBrightness)
+                    }.onChange(of: screenBrightness) { value in
+                        UIScreen.main.brightness = value
                     }
-                    DictationField(placeholder: "Your name", text: $name)
+                    
+                    VStack(alignment: .leading, spacing: PaddingSizes._12) {
+                        Text("Cursor Speed")
+                        
+                        HStack {
+                            Button {
+                                updateCursorSpeed(multiplier: 0.75)
+                            } label: {
+                                Text("Decrease")
+                            }.onTap(name: "decrease") {
+                                updateCursorSpeed(multiplier: 0.75)
+                            }.buttonStyle(
+                                DefaultButtonStyle(
+                                    disabled: UXDefaults.cursorMovementMultiplier.width <= 15)
+                            )
+                            .disabled(UXDefaults.cursorMovementMultiplier.width <= 15)
+                            
+                            Spacer()
+                            
+                            Button {
+                                updateCursorSpeed(multiplier: 1.25)
+                            } label: {
+                                Text("Increase")
+                            }.onTap(name: "Increase") {
+                                updateCursorSpeed(multiplier: 1.25)
+                            }.buttonStyle(
+                                DefaultButtonStyle(
+                                    disabled: UXDefaults.cursorMovementMultiplier.width >= 95)
+                            )
+                            .disabled(UXDefaults.cursorMovementMultiplier.width >= 95)
+                        }.id(updateCursorButtonState)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: PaddingSizes._12) {
+                        Text("Speech Recognition")
+                        if !name.isEmpty {
+                            Text("Hey, \(name)!")
+                        }
+                        DictationField(placeholder: "Your name", text: $name)
+                    }
                 }
-            }
-            .font(FontStyles.Body.font)
-            .frame(maxWidth: UXDefaults.maximumPageWidth)
-
+                .font(FontStyles.Body.font)
+                .frame(maxWidth: UXDefaults.maximumPageWidth)
+            }.followScroll(name: "playground", direction: .vertical)
+            
             Spacer()
         }.padding(.bottom, geometryProxyValue.geom?.safeAreaInsets.bottom)
     }
