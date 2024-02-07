@@ -248,6 +248,8 @@ extension InteractionManager {
             return
         }
 
+        print(dragListeners)
+        
         if activeDragListener == nil {
             runListenersWithMatchingBoundingBox(
                 boundingBox: getCursorBoundingBox(),
@@ -272,10 +274,6 @@ extension InteractionManager {
             boundingBox: getCursorBoundingBox(),
             possibleListeners: possibleListeners
         )
-
-        print(">>> ZOOM <<<")
-        print("Scale:", scale)
-        print("Bounding Box:", getCursorBoundingBox())
     }
 }
 

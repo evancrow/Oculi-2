@@ -91,7 +91,6 @@ struct PlaygroundView: View {
             value * multiplier
         }
         updateCursorButtonState += 1
-        print(multiplier, UXDefaults.cursorMovementMultiplier)
     }
 
     init() {

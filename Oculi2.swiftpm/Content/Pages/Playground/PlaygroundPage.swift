@@ -50,8 +50,6 @@ struct PlaygroundPage: View {
             HStack {
                 Spacer()
                 VStack(spacing: PaddingSizes._52) {
-                    Spacer()
-
                     VStack(spacing: PaddingSizes._52) {
                         VStack(spacing: PaddingSizes._6) {
                             Text(step.title)
@@ -71,8 +69,6 @@ struct PlaygroundPage: View {
                             }
                         }
                     }
-
-                    Spacer()
 
                     VStack(spacing: PaddingSizes._12) {
                         HStack(spacing: PaddingSizes._32) {

@@ -15,22 +15,19 @@ private struct SliderDefaults {
 struct Slider: View {
     @Binding var value: CGFloat
     @State private var offset: CGSize = .zero
-    @State private var width: CGFloat = 0
-
-    var sliderBoundsWidth: CGFloat {
-        width - (PaddingSizes._52 * 2) - SliderDefaults.ButtonSize
-    }
+    @State private var maximum: CGSize = .zero
 
     var body: some View {
         ZStack {
-            GeometryReader { geom in
-                Rectangle()
-                    .frame(height: SliderDefaults.SliderHeight)
-                    .foregroundStyle(Color(uiColor: .secondarySystemFill))
-                    .useEffect(deps: geom.size) { value in
-                        self.width = value.width
-                    }
-            }
+            Rectangle()
+                .frame(height: SliderDefaults.SliderHeight)
+                .foregroundStyle(Color(uiColor: .secondarySystemFill))
+                .onViewBoundsChange { bounds in
+                    maximum = CGSize(
+                        width: bounds.width - (PaddingSizes._52 * 2) - SliderDefaults.ButtonSize,
+                        height: 0
+                    )
+                }
 
             HStack {
                 Rectangle()
@@ -39,11 +36,12 @@ struct Slider: View {
                     .onDrag(
                         name: "slider",
                         lockAxis: .horizontal,
-                        maximum: CGSize(width: sliderBoundsWidth, height: 0)
+                        minimum: CGSize(width: 0, height: 0),
+                        maximum: maximum
                     ) { offset in
-                        value = offset.width / sliderBoundsWidth
+                        value = offset.width / maximum.width
                     }
-
+                
                 Spacer()
             }.padding(.horizontal, PaddingSizes._52)
         }.frame(height: SliderDefaults.ButtonSize)

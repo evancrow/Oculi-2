@@ -112,6 +112,7 @@ private struct DragViewModifier: ViewModifier {
     let name: String
     var offsetView: Bool = true
     var lockAxis: Axis?
+    var minimum: CGSize?
     var maximum: CGSize?
     let onDrag: (CGSize) -> Void
 
@@ -124,23 +125,29 @@ private struct DragViewModifier: ViewModifier {
                         boundingBox: bounds.offsetBy(dx: offset.width, dy: offset.height),
                         delta: offset
                     ) { offset in
-                        var offset = offset
+                        var newOffset = offset
+                        if let minimum {
+                            newOffset = CGSize(
+                                width: max(newOffset.width, minimum.width),
+                                height: max(newOffset.height, minimum.height)
+                            )
+                        }
+                        
                         if let maximum {
-                            offset = CGSize(
-                                width: min(offset.width, maximum.width),
-                                height: min(offset.height, maximum.height)
+                            newOffset = CGSize(
+                                width: min(newOffset.width, maximum.width),
+                                height: min(newOffset.height, maximum.height)
                             )
                         }
 
                         if let lockAxis {
-                            self.offset = CGSize(
-                                width: lockAxis == .horizontal ? offset.width : 0,
-                                height: lockAxis == .vertical ? offset.height : 0
+                            newOffset = CGSize(
+                                width: lockAxis == .horizontal ? newOffset.width : 0,
+                                height: lockAxis == .vertical ? newOffset.height : 0
                             )
-                        } else {
-                            self.offset = offset
                         }
-
+                        
+                        self.offset = newOffset
                         onDrag(offset)
                     }
                     draggingListener = listener?.$dragging.sink { value in
@@ -154,12 +161,13 @@ private struct DragViewModifier: ViewModifier {
                     }
                 }
             )
+            .id(maximum?.width)
+            .offset(offsetView ? offset : .zero)
             .onDisappear {
                 if let listener = listener {
                     interactionManager.removeListener(listener)
                 }
             }
-            .offset(offsetView ? offset : .zero)
     }
 }
 
@@ -167,11 +175,18 @@ extension View {
     func onDrag(
         name: String,
         lockAxis: Axis? = nil,
+        minimum: CGSize? = nil,
         maximum: CGSize? = nil,
         onDrag: @escaping (CGSize) -> Void
     ) -> some View {
         return self.modifier(
-            DragViewModifier(name: name, lockAxis: lockAxis, maximum: maximum, onDrag: onDrag)
+            DragViewModifier(
+                name: name,
+                lockAxis: lockAxis,
+                minimum: minimum,
+                maximum: maximum,
+                onDrag: onDrag
+            )
         )
     }
 }
