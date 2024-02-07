@@ -16,12 +16,12 @@ public class InteractionManager: ObservableObject {
     var interactionEnabled = false
 
     // MARK: - Scrolling
-    private var scrolling = false {
+    var scrolling = false {
         didSet {
             if scrolling {
                 scrollingTimer?.invalidate()
                 scrollingTimer = Timer.scheduledTimer(
-                    withTimeInterval: 2,
+                    withTimeInterval: 1,
                     repeats: false
                 ) { [weak self] _ in
                     self?.scrolling = false
@@ -105,17 +105,19 @@ public class InteractionManager: ObservableObject {
     }
 
     public func moveCursorOffset(by value: CGPoint) {
-        guard interactionEnabled, !scrolling else {
+        guard interactionEnabled else {
             return
         }
 
         if checkIfOffsetIsInBounds(value) {
             withAnimation(.linear) {
-                if switchToDragging {
+                if switchToDragging || scrolling {
                     onDrag(delta: CGSize(width: value.x, height: value.y))
                 }
 
-                cursorOffset.add(point: value)
+                if !scrolling {
+                    cursorOffset.add(point: value)
+                }
             }
         }
     }
@@ -254,27 +256,6 @@ extension InteractionManager {
         }
 
         updateActiveDragOffset()
-    }
-
-    // MARK: - Scroll
-    public func onScroll(direction: Axis, distance: CGFloat) {
-        guard !switchToDragging else {
-            return
-        }
-
-        let possibleListeners = scrollListeners.filter { $0.direction == direction }
-        possibleListeners.forEach {
-            $0.distance = distance
-        }
-        runListenersWithMatchingBoundingBox(
-            boundingBox: getCursorBoundingBox(),
-            possibleListeners: possibleListeners
-        )
-
-        print(">>> SCROLL <<<")
-        print("Direction:", direction)
-        print("Distance:", distance)
-        print("Bounding Box:", getCursorBoundingBox())
     }
 
     // MARK: - Zoom

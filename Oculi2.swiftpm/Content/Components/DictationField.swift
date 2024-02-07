@@ -14,6 +14,7 @@ struct DictationField: View {
     let placeholder: String
     @Binding var text: String
     @FocusState var focusTextField: Bool
+    @State var unfocusFieldTimer: Timer?
 
     // Microphone aniamtion
     /// Either 0 or 1, both will have a different effect.
@@ -64,12 +65,17 @@ struct DictationField: View {
                     }
 
                     self.text = transcriptForTextField
+                    
+                    unfocusFieldTimer?.invalidate()
+                    unfocusFieldTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: false) { _ in
+                        focusTextField = false
+                    }
                 }
 
             if speechRecognizerIsActive {
                 Image(systemName: "waveform.and.mic")
                     .foregroundColor(
-                        microphoneAnimationState == 0 ? Color(uiColor: .label) : .Oculi.Button.Label
+                        microphoneAnimationState == 0 ? Color(uiColor: .label) : .Oculi.Pink
                     )
             }
         }

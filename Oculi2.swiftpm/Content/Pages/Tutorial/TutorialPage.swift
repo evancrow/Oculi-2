@@ -51,7 +51,7 @@ enum TutorialStep: String {
             return Text("To move on, tap ") + Text("Next Page.").italic()
         case .cursor:
             return Text(
-                "Try moving to each circle on the page.")
+                "Try moving to each square on the page.")
         case .dragging:
             return Text("Drag the filled square to complete the shape.")
         case .zooming:

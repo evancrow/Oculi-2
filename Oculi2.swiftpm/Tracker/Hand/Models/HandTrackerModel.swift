@@ -17,9 +17,9 @@ struct HandTrackerDefaults {
     static let HandDataAverage = 3
 
     // -- Margin --
-    static let PoseBuffer: CGFloat = 0.075
+    static let PoseBuffer: CGFloat = 0.065
     static let CriticalPointSDWeight: CGFloat = 0.25
-    static let NonCriticalPointSDWeight: CGFloat = 0.75
+    static let NonCriticalPointSDWeight: CGFloat = 0.65
 
     // -- Pinch --
     static let MaximumPinchSeperationTime: Double = 1
@@ -27,9 +27,9 @@ struct HandTrackerDefaults {
     /// Similar to a long tap.
     static let LongPinchDuration = 2
 
-    // -- Actions --
+    // -- Scroll --
     static let ScrollThreshold: CGFloat = 30
-    static let DragThreshold: Double = 50
+    static let ScrollMultiplier: CGFloat = 2
 }
 
 class HandTrackerModel: ObservableObject {
@@ -157,28 +157,6 @@ class HandTrackerModel: ObservableObject {
         )
     }
 
-    @discardableResult
-    private func checkForScroll() -> Bool {
-        let (totalXChange, totalYChange, numberOfPoints) = getXYDelta()
-        let direction: Axis = totalYChange >= totalXChange ? .vertical : .horizontal
-        var delta = direction == .vertical ? totalYChange : totalXChange
-        // The delta is usually very small (ex: 0.0001). Multiply it by 1000 to make it usuable.
-        delta = delta * 1000
-
-        print(numberOfPoints, delta)
-
-        guard numberOfPoints > 5, delta >= HandTrackerDefaults.ScrollThreshold else {
-            return false
-        }
-
-        interactionManager.onScroll(
-            direction: direction,
-            distance: delta
-        )
-
-        return true
-    }
-
     // MARK: - init
     init(interactionManager: InteractionManager) {
         self.interactionManager = interactionManager
@@ -209,8 +187,6 @@ extension HandTrackerModel: HandTrackerDelegate {
             switch handPose {
             case .pinch:
                 onPinch()
-            case .twoFinger:
-                checkForScroll()
             default:
                 pinchingStopped()
             }

@@ -20,15 +20,15 @@ struct Slider: View {
             ZStack {
                 Rectangle()
                     .frame(height: SliderDefaults.SliderHeight)
-                    .foregroundStyle(Color(uiColor: .systemGroupedBackground))
+                    .foregroundStyle(Color(uiColor: .secondarySystemFill))
 
                 HStack {
                     let width = geom.size.width - (PaddingSizes._52 * 2) - SliderDefaults.ButtonSize
                     Rectangle()
                         .frame(width: SliderDefaults.ButtonSize, height: SliderDefaults.ButtonSize)
                         .foregroundStyle(Color.Oculi.Pink)
-                        .onDrag(name: "slider") { offset in
-                            value = offset.width / width
+                        .onScroll(name: "slider", direction: .horizontal) { offset in
+                            value = offset / width
                         }
 
                     Spacer()

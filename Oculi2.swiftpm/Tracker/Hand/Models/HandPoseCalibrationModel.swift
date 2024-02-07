@@ -9,7 +9,7 @@ import Combine
 import Foundation
 
 struct HandTrackerCalibrationDefaults {
-    static let SetUpTime = 6
+    static let SetUpTime = 5
     static let CalibrationTime = 5
     static var TotalTimePerPose: Int {
         SetUpTime + CalibrationTime

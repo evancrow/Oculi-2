@@ -32,14 +32,21 @@ struct SegmentedPicker: View {
                         .padding(.horizontal, PaddingSizes._32)
                         .padding(.vertical, PaddingSizes._12)
                         .frame(maxHeight: .infinity)
+                        .foregroundStyle(
+                            selectedOption == option && showSelected ? Color.Oculi.Button.Label : Color(uiColor: .label)
+                        )
                         .background(
                             selectedOption == option && showSelected ? Color.Oculi.Pink : nil
                         )
-                }.buttonStyle(UnderlinedButtonStyle())
+                }
+                .buttonStyle(UnderlinedButtonStyle())
+                .onTap(name: option) {
+                    selectedOption = option
+                }
             }
         }
         .background(
-            Color(uiColor: .systemGroupedBackground)
+            Color(uiColor: .secondarySystemFill)
         )
         .fixedSize(horizontal: false, vertical: true)
     }

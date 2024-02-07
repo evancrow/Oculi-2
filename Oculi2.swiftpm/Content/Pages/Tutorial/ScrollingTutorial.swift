@@ -21,7 +21,11 @@ struct ScrollingTutorial: View {
                 onComplete()
             } label: {
                 Text("Next Page")
-            }.buttonStyle(DefaultButtonStyle())
+            }
+            .buttonStyle(DefaultButtonStyle())
+            .onTap(name: "next") {
+                onComplete()
+            }
         }
     }
 }

@@ -110,6 +110,7 @@ private struct DragViewModifier: ViewModifier {
     @State var offset: CGSize = .zero
 
     let name: String
+    var offsetView: Bool = true
     let onDrag: (CGSize) -> Void
 
     func body(content: Content) -> some View {
@@ -140,7 +141,7 @@ private struct DragViewModifier: ViewModifier {
                     interactionManager.removeListener(listener)
                 }
             }
-            .offset(offset)
+            .offset(offsetView ? offset : .zero)
     }
 }
 
@@ -156,35 +157,6 @@ extension View {
 }
 
 // MARK: - Scroll
-private struct ScrollViewModifier: ViewModifier {
-    @EnvironmentObject var interactionManager: InteractionManager
-    @State var listener: InteractionListener?
-
-    let name: String
-    let direction: Axis
-    let onScroll: (CGFloat) -> Void
-
-    func body(content: Content) -> some View {
-        content
-            .modifier(
-                ViewBoundsListenerModifier { bounds in
-                    listener = ScrollListener(
-                        id: "scroll-listener-\(name)",
-                        direction: direction,
-                        boundingBox: bounds,
-                        onScroll: onScroll
-                    )
-
-                    interactionManager.updateListener(listener!)
-                }
-            ).onDisappear {
-                if let listener = listener {
-                    interactionManager.removeListener(listener)
-                }
-            }
-    }
-}
-
 private struct AutoScrollViewModifier: ViewModifier {
     @EnvironmentObject var interactionManager: InteractionManager
     @State var listener: InteractionListener?
@@ -207,11 +179,32 @@ private struct AutoScrollViewModifier: ViewModifier {
                 name: name,
                 direction: direction
             ) { amount in
+                guard let scrollView = scrollView else {
+                    return
+                }
+
+                interactionManager.scrolling = true
+                let currentOffset =
+                    direction == .vertical ? scrollView.contentOffset.y : scrollView.contentOffset.x
+                var newOffset = currentOffset + amount
+
                 DispatchQueue.main.async {
-                    self.scrollView?.setContentOffset(
+                    newOffset = max(
+                        10,
+                        min(
+                            amount,
+                            direction == .vertical
+                                ? scrollView.contentSize.height - scrollView.frame.height
+                                : scrollView.contentSize.width - scrollView.frame.width
+                        )
+                    )
+
+                    print(newOffset)
+
+                    scrollView.setContentOffset(
                         CGPoint(
-                            x: direction == .horizontal ? amount : 0,
-                            y: direction == .vertical ? amount : 0
+                            x: direction == .horizontal ? newOffset : 0,
+                            y: direction == .vertical ? newOffset : 0
                         ),
                         animated: false
                     )
@@ -228,11 +221,13 @@ extension View {
         onScroll: @escaping (CGFloat) -> Void
     ) -> some View {
         return self.modifier(
-            ScrollViewModifier(
-                name: name,
-                direction: direction,
-                onScroll: onScroll
-            )
+            DragViewModifier(name: name, offsetView: false) { delta in
+                let dragDirection: Axis = delta.height > delta.width ? .vertical : .horizontal
+                let amount = dragDirection == .vertical ? delta.height : delta.width
+                if dragDirection == direction {
+                    onScroll(amount * HandTrackerDefaults.ScrollMultiplier)
+                }
+            }
         )
     }
 
@@ -257,7 +252,7 @@ private struct ZoomViewModifier: ViewModifier {
     let name: String
     let minZoomDepth: Int
     var minScale: Double {
-        Double(truncating: pow(2, -minZoomDepth) as NSNumber)
+        1 / Double(truncating: pow(2, minZoomDepth) as NSNumber)
     }
     let maxZoomDepth: Int
     var maxScale: Double {

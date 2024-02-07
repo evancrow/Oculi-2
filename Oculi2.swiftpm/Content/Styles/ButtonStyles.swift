@@ -9,6 +9,7 @@ import Foundation
 import SwiftUI
 
 struct DefaultButtonStyle: ButtonStyle {
+    var disabled = false
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(FontStyles.Title3.font)
@@ -16,17 +17,18 @@ struct DefaultButtonStyle: ButtonStyle {
             .padding(.vertical, 22)
             .background(Color.Oculi.Pink)
             .foregroundStyle(Color.Oculi.Button.Label)
-            .opacity(configuration.isPressed ? 0.7 : 1)
+            .opacity(configuration.isPressed || disabled ? 0.7 : 1)
     }
 }
 
 struct UnderlinedButtonStyle: ButtonStyle {
+    var disabled = false
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(FontStyles.Header2.font)
             .underline()
             .italic()
-            .opacity(configuration.isPressed ? 0.7 : 1)
+            .opacity(configuration.isPressed || disabled ? 0.7 : 1)
     }
 }
 

@@ -18,35 +18,50 @@ struct ZoomingTutorial: View {
             VStack(spacing: PaddingSizes._12) {
                 Image("Yosemite")
                     .resizable()
-                    .scaledToFit()
                     .scaleEffect(scale)
+                    .scaledToFit()
+                    .frame(maxWidth: UXDefaults.maximumPageWidth)
+                    .clipShape(Rectangle())
+                    .onZoom(
+                        name: "image-zoom",
+                        minZoomDepth: 0,
+                        maxZoomDepth: 2,
+                        scale: $scale
+                    )
 
                 Text("A cool photo I took of the Yosemite Valley!")
                     .font(FontStyles.Body2.font)
                     .italic()
             }
-            .clipShape(Rectangle())
-            .frame(maxWidth: 500)
 
             VStack(spacing: PaddingSizes._12) {
                 Button {
                     onComplete()
                 } label: {
                     Text("Finish Tutorial")
-                }.buttonStyle(DefaultButtonStyle())
+                }
+                .buttonStyle(DefaultButtonStyle())
+                .onTap(name: "finish") {
+                    onComplete()
+                }
 
                 Button {
                     onRestart()
                 } label: {
                     Text("Restart")
-                }.buttonStyle(UnderlinedButtonStyle())
+                }
+                .buttonStyle(UnderlinedButtonStyle())
+                .onTap(name: "restart") {
+                    onRestart()
+                }
             }
         }
     }
 }
 
 #Preview {
-    ZoomingTutorial {
-    } onComplete: {
+    ZoomingTutorial {} onComplete: {
     }
+    .environmentObject(InteractionManager())
+    .environmentObject(GeometryProxyValue())
 }

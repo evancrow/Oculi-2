@@ -8,8 +8,10 @@
 import SwiftUI
 
 struct PlaygroundView: View {
+    @EnvironmentObject var geometryProxyValue: GeometryProxyValue
     @State var screenBrightness: CGFloat
     @State var name: String = ""
+    @State var updateCursorButtonState = 0
 
     var body: some View {
         HStack {
@@ -40,19 +42,29 @@ struct PlaygroundView: View {
 
                     HStack {
                         Button {
-
+                            updateCursorSpeed(multiplier: 0.75)
                         } label: {
                             Text("Decrease")
-                        }
-
+                        }.onTap(name: "decrease") {
+                            updateCursorSpeed(multiplier: 0.75)
+                        }.buttonStyle(
+                            DefaultButtonStyle(disabled: UXDefaults.cursorMovementMultiplier.width <= 15)
+                        )
+                        .disabled(UXDefaults.cursorMovementMultiplier.width <= 15)
+                        
                         Spacer()
 
                         Button {
-
+                            updateCursorSpeed(multiplier: 1.25)
                         } label: {
                             Text("Increase")
-                        }
-                    }.buttonStyle(DefaultButtonStyle())
+                        }.onTap(name: "Increase") {
+                            updateCursorSpeed(multiplier: 1.25)
+                        }.buttonStyle(
+                            DefaultButtonStyle(disabled: UXDefaults.cursorMovementMultiplier.width >= 95)
+                        )
+                        .disabled(UXDefaults.cursorMovementMultiplier.width >= 95)
+                    }.id(updateCursorButtonState)
                 }
 
                 VStack(alignment: .leading, spacing: PaddingSizes._12) {
@@ -67,7 +79,15 @@ struct PlaygroundView: View {
             .frame(maxWidth: UXDefaults.maximumPageWidth)
 
             Spacer()
+        }.padding(.bottom, geometryProxyValue.geom?.safeAreaInsets.bottom)
+    }
+    
+    func updateCursorSpeed(multiplier: Double) {
+        UXDefaults.cursorMovementMultiplier.apply { value in
+            value * multiplier
         }
+        updateCursorButtonState += 1
+        print(multiplier, UXDefaults.cursorMovementMultiplier)
     }
 
     init() {

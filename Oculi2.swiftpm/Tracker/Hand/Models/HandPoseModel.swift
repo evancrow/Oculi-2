@@ -10,8 +10,6 @@ import Foundation
 enum HandPose: String, CaseIterable {
     /// Thumb and index fingers pinched together.
     case pinch = "Pinch"
-    /// Twp fingers together.
-    case twoFinger = "Two Finger Point"
     /// No pose detected.
     case none = "None"
 
@@ -19,8 +17,6 @@ enum HandPose: String, CaseIterable {
         switch self {
         case .pinch:
             "Pinch Your Fingers"
-        case .twoFinger:
-            "Point Two Fingers"
         case .none:
             "None"
         }
@@ -30,29 +26,19 @@ enum HandPose: String, CaseIterable {
         switch self {
         case .pinch:
             "Pinch both your dominant thumb and your index finger together."
-        case .twoFinger:
-            "Point your dominant index and middle fingers slightly up at the sky."
         case .none:
             "None"
         }
     }
 
     var nextPose: HandPose? {
-        switch self {
-        case .pinch:
-            return .twoFinger
-        default:
-            return nil
-        }
+        nil
     }
 }
 
 struct HandPoseMargins {
-    static private let Buffer: CGFloat = 0.075
     static private(set) var PinchMargins: [CGFloat] = Array(repeating: 1, count: 5)
     static private(set) var PinchMarginsSD: CGFloat = 0
-    static private(set) var TwoPointMargins: [CGFloat] = Array(repeating: 1, count: 5)
-    static private(set) var TwoPointMarginsSD: CGFloat = 0
 
     public static func UpdateMargins(
         for pose: HandPose, margins: [CGFloat], standardDeviation: CGFloat
@@ -61,22 +47,24 @@ struct HandPoseMargins {
         case .pinch:
             PinchMargins = margins
             PinchMarginsSD = standardDeviation
-        case .twoFinger:
-            TwoPointMargins = margins
-            TwoPointMarginsSD = standardDeviation
         case .none:
             return
         }
+    }
+
+    public static func Buffer(sd: CGFloat, isCritical: Bool)
+        -> CGFloat
+    {
+        return isCritical
+            ? (HandTrackerDefaults.PoseBuffer + sd * HandTrackerDefaults.CriticalPointSDWeight)
+            : (HandTrackerDefaults.PoseBuffer + sd * HandTrackerDefaults.NonCriticalPointSDWeight)
     }
 
     /// Checks if a value is within the margin calculated at calibration.
     public static func Within(margin: CGFloat, value: CGFloat, sd: CGFloat, isCritical: Bool)
         -> Bool
     {
-        let buffer =
-            isCritical
-            ? (HandTrackerDefaults.PoseBuffer + sd * HandTrackerDefaults.CriticalPointSDWeight)
-            : (HandTrackerDefaults.PoseBuffer + sd * HandTrackerDefaults.NonCriticalPointSDWeight)
+        let buffer = Buffer(sd: sd, isCritical: isCritical)
         return ((margin - buffer)...(margin + buffer)).contains(value)
     }
 }
@@ -104,21 +92,8 @@ class HandPoseModel {
             )
         }
 
-        func checkTwoFingerPointPose(hand: Hand) -> Bool {
-            // Assuming 1 is the index for index-middle distance.
-            return tipPointsAllWithin(
-                margins: HandPoseMargins.TwoPointMargins,
-                sds: HandPoseMargins.TwoPointMarginsSD,
-                criticalIndex: 1
-            )
-        }
-
         if checkPinchPose(hand: hand) {
             return .pinch
-        }
-
-        if checkTwoFingerPointPose(hand: hand) {
-            return .twoFinger
         }
 
         return .none
