@@ -13,8 +13,8 @@ struct DefaultButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(FontStyles.Title3.font)
-            .padding(.horizontal, 90)
-            .padding(.vertical, 22)
+            .padding(.horizontal, 75)
+            .padding(.vertical, 18)
             .background(Color.Oculi.Pink)
             .foregroundStyle(Color.Oculi.Button.Label)
             .opacity(configuration.isPressed || disabled ? 0.7 : 1)

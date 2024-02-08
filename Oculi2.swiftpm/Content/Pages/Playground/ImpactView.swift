@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ImpactView: View {
     var body: some View {
-        ScrollView {
+        ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: PaddingSizes._52) {
                 TextSection(
                     header: "Use Cases",

@@ -17,7 +17,7 @@ struct PlaygroundView: View {
         HStack {
             Spacer()
 
-            ScrollView {
+            ScrollView(showsIndicators: false) {
                 VStack(spacing: PaddingSizes._52) {
                     TextSection(
                         header: "Thank You",
@@ -33,49 +33,31 @@ struct PlaygroundView: View {
                     
                     VStack(alignment: .leading, spacing: PaddingSizes._12) {
                         Text("Screen Brightness")
+                            .font(FontStyles.Body.font)
+                        
                         Slider(value: $screenBrightness)
                     }.onChange(of: screenBrightness) { value in
                         UIScreen.main.brightness = value
                     }
                     
                     VStack(alignment: .leading, spacing: PaddingSizes._12) {
-                        Text("Cursor Speed")
+                        Text("Speech Recognition")
+                            .font(FontStyles.Body.font)
                         
-                        HStack {
-                            Button {
-                                updateCursorSpeed(multiplier: 0.75)
-                            } label: {
-                                Text("Decrease")
-                            }.onTap(name: "decrease") {
-                                updateCursorSpeed(multiplier: 0.75)
-                            }.buttonStyle(
-                                DefaultButtonStyle(
-                                    disabled: UXDefaults.cursorMovementMultiplier.width <= 15)
-                            )
-                            .disabled(UXDefaults.cursorMovementMultiplier.width <= 15)
-                            
-                            Spacer()
-                            
-                            Button {
-                                updateCursorSpeed(multiplier: 1.25)
-                            } label: {
-                                Text("Increase")
-                            }.onTap(name: "Increase") {
-                                updateCursorSpeed(multiplier: 1.25)
-                            }.buttonStyle(
-                                DefaultButtonStyle(
-                                    disabled: UXDefaults.cursorMovementMultiplier.width >= 95)
-                            )
-                            .disabled(UXDefaults.cursorMovementMultiplier.width >= 95)
-                        }.id(updateCursorButtonState)
+                        if !name.isEmpty {
+                            Text("Hey, \(name)!")
+                                .font(FontStyles.Body.font)
+                        }
+                        
+                        DictationField(placeholder: "Your name", text: $name)
                     }
                     
                     VStack(alignment: .leading, spacing: PaddingSizes._12) {
-                        Text("Speech Recognition")
-                        if !name.isEmpty {
-                            Text("Hey, \(name)!")
-                        }
-                        DictationField(placeholder: "Your name", text: $name)
+                        Text("Artboard")
+                            .font(FontStyles.Body.font)
+                        
+                        ArtboardView()
+                            .frame(minHeight: 300)
                     }
                 }
                 .font(FontStyles.Body.font)

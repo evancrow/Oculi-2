@@ -9,7 +9,7 @@ import SwiftUI
 
 struct DevelopersView: View {
     var body: some View {
-        ScrollView {
+        ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: PaddingSizes._52) {
                 VStack(alignment: .leading, spacing: PaddingSizes._12) {
                     VStack(alignment: .leading, spacing: PaddingSizes._6) {

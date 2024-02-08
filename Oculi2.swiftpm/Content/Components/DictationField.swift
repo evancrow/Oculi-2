@@ -34,7 +34,7 @@ struct DictationField: View {
             TextField(placeholder, text: $text)
                 .focused($focusTextField)
                 .padding(PaddingSizes._22)
-                .foregroundStyle(Color.Oculi.Secondary)
+                .background(Color.Oculi.Secondary)
                 .foregroundStyle(Color.Oculi.Button.Label)
                 .onTap(name: placeholder) {
                     focusTextField = true
