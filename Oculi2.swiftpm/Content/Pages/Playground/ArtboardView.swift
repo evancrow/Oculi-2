@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ArtboardView: View {
     @EnvironmentObject private var geometryProxyValue: GeometryProxyValue
+    @EnvironmentObject private var interactionManager: InteractionManager
     @State private var lines: [Line] = []
     
     var isEmpty: Bool {
@@ -56,16 +57,26 @@ struct ArtboardView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .onDrag(name: "Artboard") { location in
-                guard let lastIdx = lines.indices.last, let geom = geometryProxyValue.geom else {
+                guard let geom = geometryProxyValue.geom else {
                     return
                 }
-
+                
                 var origin = CGPoint(
                     x: geom.size.width / 2,
                     y: geom.size.width / 2
                 )
                 origin.add(point: CGPoint(x: location.width, y: location.height))
-                lines[lastIdx].points.append(origin)
+
+                if let lastIdx = lines.indices.last {
+                    lines[lastIdx].points.append(origin)
+                } else {
+                    lines.append(Line(points: [origin], color: .Oculi.Pink))
+                }
+            }
+            .onChange(of: interactionManager.switchToDragging) { value in
+                if !value {
+                    lines.append(Line(points: [], color: .Oculi.Pink))
+                }
             }
         }
     }
