@@ -47,7 +47,7 @@ struct SegmentedPicker: View {
             }
         }
         .background(
-            Color(uiColor: .secondarySystemFill)
+            Color.Oculi.Secondary
         )
         .fixedSize(horizontal: false, vertical: true)
     }

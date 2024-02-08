@@ -19,6 +19,7 @@ enum PlaygroundOption: String, CaseIterable {
 enum PlaygroundStep: String, CaseIterable {
     case playground = "Playground"
     case developers = "Developers"
+    case impact = "Impact"
 
     var title: String {
         switch self {
@@ -26,6 +27,8 @@ enum PlaygroundStep: String, CaseIterable {
             return "Experimental Playground"
         case .developers:
             return "How Developers Use Oculi"
+        case .impact:
+            return "Oculi’s Use Cases & Impact"
         }
     }
 
@@ -35,6 +38,8 @@ enum PlaygroundStep: String, CaseIterable {
             "Here you can try interacting with different elements."
         case .developers:
             "Here's how effortlessly developers, including those at Apple, can integrate Oculi into their SwiftUI applications."
+        case .impact:
+            "I created Oculi with a vision to empower individuals in my community and across the globe facing mobility challenges. The second iteration of Oculi builds upon the success of the initial version, enhancing ease of use, reliability, and accessibility."
         }
     }
 }
@@ -66,6 +71,8 @@ struct PlaygroundPage: View {
                                 PlaygroundView()
                             case .developers:
                                 DevelopersView()
+                            case .impact:
+                                ImpactView()
                             }
                         }
                     }

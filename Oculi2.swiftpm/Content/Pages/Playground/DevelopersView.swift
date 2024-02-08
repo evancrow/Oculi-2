@@ -52,7 +52,7 @@ struct DevelopersView: View {
                 }.font(FontStyles.Body.font)
             }
         }
-        .followScroll(name: "playground", direction: .vertical)
+        .followScroll(name: "developers", direction: .vertical)
         .frame(maxWidth: UXDefaults.maximumPageWidth)
     }
 }

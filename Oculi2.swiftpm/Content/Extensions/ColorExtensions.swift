@@ -16,5 +16,6 @@ extension Color {
 
         static let Pink = Color(hue: 317 / 360, saturation: 0.06, brightness: 1)
         static let Blue = Color(hue: 245 / 360, saturation: 0.06, brightness: 1)
+        static let Secondary = Color(uiColor: .secondarySystemFill)
     }
 }

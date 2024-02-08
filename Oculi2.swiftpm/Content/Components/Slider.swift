@@ -21,7 +21,7 @@ struct Slider: View {
         ZStack {
             Rectangle()
                 .frame(height: SliderDefaults.SliderHeight)
-                .foregroundStyle(Color(uiColor: .secondarySystemFill))
+                .foregroundStyle(Color.Oculi.Secondary)
                 .onViewBoundsChange { bounds in
                     maximum = CGSize(
                         width: bounds.width - (PaddingSizes._52 * 2) - SliderDefaults.ButtonSize,
