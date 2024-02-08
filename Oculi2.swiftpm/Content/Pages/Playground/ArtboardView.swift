@@ -1,6 +1,6 @@
 //
 //  ArtboardView.swift
-//  
+//
 //
 //  Created by Evan Crow on 2/8/24.
 //
@@ -11,11 +11,11 @@ struct ArtboardView: View {
     @EnvironmentObject private var geometryProxyValue: GeometryProxyValue
     @EnvironmentObject private var interactionManager: InteractionManager
     @State private var lines: [Line] = []
-    
+
     var isEmpty: Bool {
         lines.count == 0
     }
-    
+
     var body: some View {
         VStack(spacing: PaddingSizes._52) {
             HStack {
@@ -28,10 +28,10 @@ struct ArtboardView: View {
                 .onTap(name: "clear") {
                     lines = []
                 }
-                
+
                 Spacer()
             }
-            
+
             ZStack {
                 if isEmpty {
                     Text("Pinch and drag to drag to draw on the Artboard!")
@@ -41,7 +41,7 @@ struct ArtboardView: View {
                         for line in lines {
                             var path = Path()
                             path.addLines(line.points)
-                            
+
                             ctx.stroke(
                                 path,
                                 with: .color(line.color),
@@ -60,7 +60,7 @@ struct ArtboardView: View {
                 guard let geom = geometryProxyValue.geom else {
                     return
                 }
-                
+
                 var origin = CGPoint(
                     x: geom.size.width / 2,
                     y: geom.size.width / 2

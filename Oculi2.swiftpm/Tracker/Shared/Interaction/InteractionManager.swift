@@ -248,8 +248,6 @@ extension InteractionManager {
             return
         }
 
-        print(dragListeners)
-        
         if activeDragListener == nil {
             runListenersWithMatchingBoundingBox(
                 boundingBox: getCursorBoundingBox(),

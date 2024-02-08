@@ -132,7 +132,7 @@ private struct DragViewModifier: ViewModifier {
                                 height: max(newOffset.height, minimum.height)
                             )
                         }
-                        
+
                         if let maximum {
                             newOffset = CGSize(
                                 width: min(newOffset.width, maximum.width),
@@ -146,7 +146,7 @@ private struct DragViewModifier: ViewModifier {
                                 height: lockAxis == .vertical ? newOffset.height : 0
                             )
                         }
-                        
+
                         self.offset = newOffset
                         onDrag(offset)
                     }

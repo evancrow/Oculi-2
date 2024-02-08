@@ -41,7 +41,7 @@ struct Slider: View {
                     ) { offset in
                         value = offset.width / maximum.width
                     }
-                
+
                 Spacer()
             }.padding(.horizontal, PaddingSizes._52)
         }.frame(height: SliderDefaults.ButtonSize)
