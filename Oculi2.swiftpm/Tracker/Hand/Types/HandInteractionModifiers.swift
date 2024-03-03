@@ -171,9 +171,48 @@ private struct DragViewModifier: ViewModifier {
     }
 }
 
+private struct DragViewModifierAdjustableOffset: ViewModifier {
+    @EnvironmentObject var interactionManager: InteractionManager
+    @State var listener: DragListener?
+    @State var draggingListener: AnyCancellable?
+    @Binding var offset: CGSize
+
+    let name: String
+
+    func body(content: Content) -> some View {
+        content
+            .modifier(
+                ViewBoundsListenerModifier { bounds in
+                    listener = DragListener(
+                        id: "drag-listener-\(name)",
+                        boundingBox: bounds.offsetBy(dx: offset.width, dy: offset.height),
+                        delta: offset
+                    ) { offset in
+                        self.offset = offset
+                    }
+                    draggingListener = listener?.$dragging.sink { value in
+                        if !value {
+                            interactionManager.updateListener(listener!)
+                        }
+                    }
+
+                    if !listener!.dragging {
+                        interactionManager.updateListener(listener!)
+                    }
+                }
+            )
+            .onDisappear {
+                if let listener = listener {
+                    interactionManager.removeListener(listener)
+                }
+            }
+    }
+}
+
 extension View {
     func onDrag(
         name: String,
+        offsetView: Bool = true,
         lockAxis: Axis? = nil,
         minimum: CGSize? = nil,
         maximum: CGSize? = nil,
@@ -182,10 +221,23 @@ extension View {
         return self.modifier(
             DragViewModifier(
                 name: name,
+                offsetView: offsetView,
                 lockAxis: lockAxis,
                 minimum: minimum,
                 maximum: maximum,
                 onDrag: onDrag
+            )
+        )
+    }
+
+    func onDrag(
+        name: String,
+        offset: Binding<CGSize>
+    ) -> some View {
+        return self.modifier(
+            DragViewModifierAdjustableOffset(
+                offset: offset,
+                name: name
             )
         )
     }

@@ -9,7 +9,7 @@ import SwiftUI
 
 enum PlaygroundOption: String, CaseIterable {
     case calibrate = "Calibrate"
-    case tutorial = "Playground"
+    case tutorial = "Tutorial"
 
     var title: String {
         self.rawValue
@@ -65,15 +65,19 @@ struct PlaygroundPage: View {
                                 .multilineTextAlignment(.center)
                         }.frame(maxWidth: UXDefaults.maximumPageWidth)
 
-                        Group {
-                            switch step {
-                            case .playground:
-                                PlaygroundView()
-                            case .developers:
-                                DevelopersView()
-                            case .impact:
-                                ImpactView()
-                            }
+                        switch step {
+                        case .playground:
+                            PlaygroundView()
+                        case .developers:
+                            Spacer()
+                            DevelopersView()
+                                .fixedSize(horizontal: false, vertical: true)
+                            Spacer()
+                        case .impact:
+                            Spacer()
+                            ImpactView()
+                                .fixedSize(horizontal: false, vertical: true)
+                            Spacer()
                         }
                     }
 
@@ -89,12 +93,13 @@ struct PlaygroundPage: View {
                                 options: PlaygroundOption.allCases.map(\.rawValue),
                                 showSelected: false
                             )
-                        }.fixedSize()
+                        }
 
                         Text("Tap or Swipe Between Pages")
                             .font(FontStyles.Body2.font)
                     }
                 }
+
                 Spacer()
             }
         }.onChange(of: selectedStep) { newValue in

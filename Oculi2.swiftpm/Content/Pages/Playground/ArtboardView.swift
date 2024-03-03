@@ -11,20 +11,22 @@ struct ArtboardView: View {
     @EnvironmentObject private var geometryProxyValue: GeometryProxyValue
     @EnvironmentObject private var interactionManager: InteractionManager
     @State private var lines: [Line] = []
+    @State private var origin: CGPoint?
+    @State private var dragOffset: CGSize = .zero
 
     var isEmpty: Bool {
         lines.count == 0
     }
 
     var body: some View {
-        VStack(spacing: PaddingSizes._52) {
+        VStack(spacing: PaddingSizes._12) {
             HStack {
                 Button {
                     lines = []
                 } label: {
                     Text("Clear Board")
                 }
-                .buttonStyle(DefaultButtonStyle())
+                .buttonStyle(UnderlinedButtonStyle())
                 .onTap(name: "clear") {
                     lines = []
                 }
@@ -56,28 +58,31 @@ struct ArtboardView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .onDrag(name: "Artboard") { location in
-                guard let geom = geometryProxyValue.geom else {
+            .onViewBoundsChange { bounds in
+                origin = CGPoint(x: bounds.width / 2, y: bounds.height / 2)
+            }
+            .onDrag(name: "Artboard", offset: $dragOffset)
+            .onChange(of: dragOffset) { location in
+                guard let geom = geometryProxyValue.geom, let origin = origin else {
                     return
                 }
 
-                var origin = CGPoint(
-                    x: geom.size.width / 2,
-                    y: geom.size.width / 2
-                )
-                origin.add(point: CGPoint(x: location.width, y: location.height))
+                var newPoint = CGPoint(x: location.width, y: location.height)
+                newPoint.add(point: origin)
 
                 if let lastIdx = lines.indices.last {
-                    lines[lastIdx].points.append(origin)
+                    lines[lastIdx].points.append(newPoint)
                 } else {
-                    lines.append(Line(points: [origin], color: .Oculi.Pink))
+                    lines.append(Line(points: [newPoint], color: .Oculi.Button.Label))
                 }
             }
             .onChange(of: interactionManager.switchToDragging) { value in
                 if !value {
-                    lines.append(Line(points: [], color: .Oculi.Pink))
+                    dragOffset = .zero
+                    lines.append(Line(points: [], color: .Oculi.Button.Label))
                 }
             }
+            .background(Color.Oculi.Pink.opacity(0.3))
         }
     }
 }

@@ -42,6 +42,7 @@ struct DictationField: View {
                     if focusTextField {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                             speechRecognizerModel.startListening(with: id)
+                            self.startUnfocusTimer()
                         }
                     } else {
                         speechRecognizerModel.stopListening(with: id)
@@ -65,12 +66,7 @@ struct DictationField: View {
                     }
 
                     self.text = transcriptForTextField
-
-                    unfocusFieldTimer?.invalidate()
-                    unfocusFieldTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: false) {
-                        _ in
-                        focusTextField = false
-                    }
+                    self.startUnfocusTimer()
                 }
 
             if speechRecognizerIsActive {
@@ -79,6 +75,16 @@ struct DictationField: View {
                         microphoneAnimationState == 0 ? Color(uiColor: .label) : .Oculi.Pink
                     )
             }
+        }
+    }
+
+    func startUnfocusTimer() {
+        unfocusFieldTimer?.invalidate()
+        unfocusFieldTimer = Timer.scheduledTimer(
+            withTimeInterval: 3,
+            repeats: false
+        ) { _ in
+            focusTextField = false
         }
     }
 }

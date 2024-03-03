@@ -128,6 +128,11 @@ struct CalibrationPage: View {
                 }.buttonStyle(DefaultButtonStyle())
             }.multilineTextAlignment(.center)
         case .calibration:
+            Image("Pinching")
+                .resizable()
+                .scaledToFit()
+                .frame(maxHeight: 150)
+
             Text("Hold for \(handPoseCalibrationModel.timeRemaining)")
                 .font(FontStyles.Title2.font)
         case .headCalibration:
